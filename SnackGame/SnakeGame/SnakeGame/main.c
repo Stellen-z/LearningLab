@@ -182,15 +182,17 @@ static void paused_update(SnakeGame *game)
     int gw = GRID_SIZE * CELL_SIZE;
     DrawRectangle(0, 0, gw, gw, (Color){ 0, 0, 0, 0x80 });
 
-    /* PAUSED 文字 */
+    /* PAUSED 文字（Verdana 字体） */
+    Font font = GetUIFont();
     const char *pausedText = "PAUSED";
-    int tw = MeasureText(pausedText, 48);
-    DrawText(pausedText, (gw - tw) / 2, gw / 2 - 30, 48, WHITE);
+    float pausedSize = 48;
+    Vector2 pausedSz = MeasureTextEx(font, pausedText, pausedSize, 0);
+    DrawTextEx(font, pausedText, (Vector2){ (gw - pausedSz.x) / 2.0f, gw / 2.0f - 30 }, pausedSize, 0, WHITE);
 
     const char *hint = "Press Space / P to Resume";
-    int hs = 20;
-    int hw = MeasureText(hint, hs);
-    DrawText(hint, (gw - hw) / 2, gw / 2 + 20, hs, (Color){ 0xB0, 0xB0, 0xB0, 0xFF });
+    float hs = 20;
+    Vector2 hintSz = MeasureTextEx(font, hint, hs, 0);
+    DrawTextEx(font, hint, (Vector2){ (gw - hintSz.x) / 2.0f, gw / 2.0f + 20 }, hs, 0, (Color){ 0xB0, 0xB0, 0xB0, 0xFF });
     EndDrawing();
 
     /* 恢复游戏 */
@@ -226,16 +228,18 @@ static void gameover_update(SnakeGame *game)
     int gw = GRID_SIZE * CELL_SIZE;
     DrawRectangle(0, 0, gw, gw, (Color){ 0, 0, 0, 0x80 });
 
-    /* GAME OVER 文字 */
+    /* GAME OVER 文字（Verdana 字体） */
+    Font font = GetUIFont();
     const char *overText = "GAME OVER";
-    int tw = MeasureText(overText, 48);
-    DrawText(overText, (gw - tw) / 2, gw / 2 - 50, 48, WHITE);
+    float overSize = 48;
+    Vector2 overSz = MeasureTextEx(font, overText, overSize, 0);
+    DrawTextEx(font, overText, (Vector2){ (gw - overSz.x) / 2.0f, gw / 2.0f - 50 }, overSize, 0, WHITE);
 
     /* 提示按任意键 */
     const char *hint = "Press any key to return to Menu";
-    int hs = 20;
-    int hw = MeasureText(hint, hs);
-    DrawText(hint, (gw - hw) / 2, gw / 2 + 10, hs, (Color){ 0xB0, 0xB0, 0xB0, 0xFF });
+    float hs = 20;
+    Vector2 hintSz = MeasureTextEx(font, hint, hs, 0);
+    DrawTextEx(font, hint, (Vector2){ (gw - hintSz.x) / 2.0f, gw / 2.0f + 10 }, hs, 0, (Color){ 0xB0, 0xB0, 0xB0, 0xFF });
     EndDrawing();
 
     /* 任意键回菜单 */

@@ -190,6 +190,11 @@ static Font GetSidebarFont(void)
     return g_sidebarFont;
 }
 
+Font GetUIFont(void)
+{
+    return GetSidebarFont();
+}
+
 /*
 * 在侧边栏中水平居中绘制文本
 * 先计算文本实际宽度，再根据侧边栏中线偏移到居中位置渲染。
