@@ -1,0 +1,44 @@
+# Build outputs
+[Oo]bj/
+[Bb]in/
+Debug/
+Release/
+x64/
+
+# MSBuild logs
+*.tlog/
+
+# Build artifacts
+*.ilk
+*.pdb
+*.idb
+*.ipch
+*.recipe
+*.log
+*.lastbuildstate
+*.Build.CppClean.log
+*.FileListAbsolute.txt
+
+# VS cache
+.vs/
+*.suo
+*.user
+*.db
+*.db-shm
+*.db-wal
+*.opendb
+
+# NuGet packages (restored during build)
+packages/
+
+# Solution files
+*.slnx
+
+# IDE
+.settings/
+
+# Executables (not standalone)
+*.exe
+
+# Project files - these MUST be committed:
+# *.vcxproj, *.vcxproj.filters, *.slnx, packages.config
