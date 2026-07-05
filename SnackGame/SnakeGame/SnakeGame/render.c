@@ -293,19 +293,20 @@ void DrawSidebar(int score, int high_score, float move_interval)
 */
 void DrawMenu(int selected)
 {
-    int winW = GRID_SIZE * CELL_SIZE;
-    int winH = GRID_SIZE * CELL_SIZE;
+    float winW = (float)(GRID_SIZE * CELL_SIZE + SIDEBAR_W);
+    float winH = (float)(GRID_SIZE * CELL_SIZE);
     Font font = GetSidebarFont();
-    ClearBackground((Color){ 0x12, 0x12, 0x12, 0xFF });
+    DrawRectangle(0, 0, (int)winW, (int)winH, (Color){ 0x12, 0x12, 0x12, 0xFF });
 
     const char *title = "SNAKE GAME";
     int titleSize = 52;
     Vector2 titleSz = MeasureTextEx(font, title, (float)titleSize, 0);
-    DrawTextEx(font, title, (Vector2){ (winW - titleSz.x) / 2.0f, 100 }, (float)titleSize, 0, (Color){ 0x42, 0xA5, 0xF5, 0xFF });
+    float titleX = (winW - titleSz.x) / 2.0f;                     /* 居中 */
+    DrawTextEx(font, title, (Vector2){ titleX, 140 }, (float)titleSize, 0, (Color){ 0x42, 0xA5, 0xF5, 0xFF });
 
     const char *items[] = { "Play", "How to Play", "Exit" };
     int itemCount = 3;
-    int startY = 250;
+    int startY = 290;
     int itemGap = 55;
     Color selBg = { 0xFF, 0xB3, 0x00, 0xFF };
     Color selText = WHITE;
@@ -313,30 +314,31 @@ void DrawMenu(int selected)
 
     for (int i = 0; i < itemCount; i++)
     {
-        int y = startY + i * itemGap;
+        float y = (float)(startY + i * itemGap);
         int fs = 28;
         Vector2 isz = MeasureTextEx(font, items[i], (float)fs, 0);
-        int x = (int)((winW - isz.x) / 2.0f);
-        int padX = 24;
-        int padY = 8;
+        float x = (winW - isz.x) / 2.0f;                          /* 居中 */
+        float padX = 24.0f;
+        float padY = 8.0f;
 
         if (i == selected)
         {
             DrawRectangleRounded(
-                (Rectangle){ (float)(x - padX), (float)y - padY, isz.x + padX * 2.0f, (float)(fs + padY * 2) },
+                (Rectangle){ x - padX, y - padY, isz.x + padX * 2.0f, (float)fs + padY * 2.0f },
                 0.2f, 8, selBg);
-            DrawTextEx(font, items[i], (Vector2){ (float)x, (float)y }, (float)fs, 0, selText);
+            DrawTextEx(font, items[i], (Vector2){ x, y }, (float)fs, 0, selText);
         }
         else
         {
-            DrawTextEx(font, items[i], (Vector2){ (float)x, (float)y }, (float)fs, 0, normText);
+            DrawTextEx(font, items[i], (Vector2){ x, y }, (float)fs, 0, normText);
         }
     }
 
     const char *hint = "Arrow Keys / W S  ->  Select   |   Enter  ->  Confirm";
     int hs = 16;
     Vector2 hintSz = MeasureTextEx(font, hint, (float)hs, 0);
-    DrawTextEx(font, hint, (Vector2){ (winW - hintSz.x) / 2.0f, (float)(winH - 50) }, (float)hs, 0, (Color){ 0x66, 0x66, 0x66, 0xFF });
+    float hintX = (winW - hintSz.x) / 2.0f;                       /* 居中 */
+    DrawTextEx(font, hint, (Vector2){ hintX, winH - 50 }, (float)hs, 0, (Color){ 0x66, 0x66, 0x66, 0xFF });
 }
 
 /*
@@ -345,10 +347,10 @@ void DrawMenu(int selected)
 */
 void DrawHowToPlay(void)
 {
-    int winW = GRID_SIZE * CELL_SIZE;
-    int winH = GRID_SIZE * CELL_SIZE;
+    float winW = (float)(GRID_SIZE * CELL_SIZE + SIDEBAR_W);
+    float winH = (float)(GRID_SIZE * CELL_SIZE);
     Font font = GetSidebarFont();
-    ClearBackground((Color){ 0x12, 0x12, 0x12, 0xFF });
+    DrawRectangle(0, 0, (int)winW, (int)winH, (Color){ 0x12, 0x12, 0x12, 0xFF });
 
     int y = 60;
     int leftX = 100;
