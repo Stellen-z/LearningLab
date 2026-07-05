@@ -10,6 +10,7 @@
 #define GRID_SIZE  20    /* 网格大小：20×20 个格子 */
 #define CELL_SIZE  30    /* 每格像素数：30×30 px */
 #define INITIAL_LENGTH 3 /* 蛇初始长度（3 节） */
+#define FOOD_COUNT  15   /* 网格上常驻食物数量 */
 
 /* ── 方向枚举 ── */
 
@@ -51,7 +52,7 @@ typedef struct {
 /* 包含蛇、食物、状态机所需的所有状态和计时数据 */
 typedef struct {
     Snake snake;                     /* 蛇的数据 */
-    Food food;                       /* 食物的数据 */
+    Food foods[FOOD_COUNT];           /* 15 个食物（每位互不重叠、不在蛇身上） */
     GameState state;                 /* 当前游戏状态（R4 启用） */
     int selected_menu;               /* 菜单当前选中项（R4 启用） */
 
@@ -71,8 +72,8 @@ typedef struct {
 /* 创建一条蛇：起始坐标、长度、朝向 */
 Snake snake_create(int head_x, int head_y, int length, Direction dir);
 
-/* 驱动蛇移动一步，检测碰撞和吃食 */
-bool  snake_move(Snake *snake, Position food_pos, bool *ate);
+/* 驱动蛇移动一步，检测碰撞和多食物吃食（被吃的索引存入 *eaten_idx，未吃则为 -1） */
+bool  snake_move(Snake *snake, Food *foods, int food_count, bool *ate, int *eaten_idx);
 
 /* 检测坐标是否碰墙（越出网格） */
 bool  wall_collided(Position pos, int grid_size);
@@ -80,8 +81,11 @@ bool  wall_collided(Position pos, int grid_size);
 /* 检测蛇头是否与蛇身重叠（自碰） */
 bool  self_collided(Snake *snake);
 
-/* 在空白格子随机生成食物 */
-void  generate_food(Position *food_pos, Snake *snake, int grid_size);
+/* 一次性生成 food_count 个食物，保证不在蛇身上且彼此不重叠 */
+void  generate_all_foods(Food *foods, int food_count, Snake *snake, int grid_size);
+
+/* 重新生成一个指定食物的位置（放入空位，避开蛇身和其他食物） */
+void  regenerate_food(Food *food, Snake *snake, Food *all_foods, int food_count, int grid_size);
 
 /* 根据分数计算移动间隔（速度） */
 float get_move_interval(int score);

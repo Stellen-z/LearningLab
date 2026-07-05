@@ -158,13 +158,17 @@ void DrawSnake(DCListNode *body, Direction dir)
 * 金黄色圆角方块，醒目易识别。
 * @param pos  食物的网格坐标
 */
-void DrawFood(Position pos)
+void DrawFoods(Food *foods, int count)
 {
     Color foodColor = { 0xFF, 0xD7, 0x40, 0xFF };
-    float px = (float)(pos.x * CELL_SIZE + CELL_PADDING);
-    float py = (float)(pos.y * CELL_SIZE + CELL_PADDING);
-    float size = (float)(CELL_SIZE - CELL_PADDING * 2);
-    DrawRectangleRounded((Rectangle){ px, py, size, size }, CELL_ROUNDNESS, 8, foodColor);
+    for (int i = 0; i < count; i++)
+    {
+        if (!foods[i].active) continue;
+        float px = (float)(foods[i].pos.x * CELL_SIZE + CELL_PADDING);
+        float py = (float)(foods[i].pos.y * CELL_SIZE + CELL_PADDING);
+        float size = (float)(CELL_SIZE - CELL_PADDING * 2);
+        DrawRectangleRounded((Rectangle){ px, py, size, size }, CELL_ROUNDNESS, 8, foodColor);
+    }
 }
 
 /* ── 侧边栏文本渲染 ── */
@@ -277,4 +281,104 @@ void DrawSidebar(int score, int high_score, float move_interval)
     DrawCenteredText("B  ->  Back",               y, 16, ctrlKeyColor);
     y += 28;
     DrawCenteredText("ESC  ->  Exit",              y, 16, ctrlKeyColor);
+}
+
+/*
+* 绘制主菜单界面
+* 标题 "SNAKE GAME" 居中大号显示，下方三个选项用 ↑↓ 切换。
+* 当前选中项（selected[i]）以金黄色块高亮 + 白色文字渲染，
+* 未选中项以浅灰色文字渲染。
+*
+* @param selected  当前选中项索引（0=开始, 1=操作说明, 2=退出）
+*/
+void DrawMenu(int selected)
+{
+    int winW = GRID_SIZE * CELL_SIZE;
+    int winH = GRID_SIZE * CELL_SIZE;
+    Color bgColor = (Color){ 0x12, 0x12, 0x12, 0xFF };
+
+    ClearBackground(bgColor);
+
+    const char *title = "SNAKE GAME";
+    int titleSize = 52;
+    int tw = MeasureText(title, titleSize);
+    DrawText(title, (winW - tw) / 2, 100, titleSize, (Color){ 0x42, 0xA5, 0xF5, 0xFF });
+
+    const char *items[] = { "Play", "How to Play", "Exit" };
+    int itemCount = 3;
+    int startY = 250;
+    int itemGap = 55;
+    Color selBg = { 0xFF, 0xB3, 0x00, 0xFF };     /* 选中项背景色：琥珀 */
+    Color selText = WHITE;                          /* 选中项文字 */
+    Color normText = { 0x90, 0x90, 0x90, 0xFF };    /* 未选中项文字 */
+
+    for (int i = 0; i < itemCount; i++)
+    {
+        int y = startY + i * itemGap;
+        int fs = 28;
+        int iw = MeasureText(items[i], fs);
+        int x = (winW - iw) / 2;
+        int padX = 24;
+        int padY = 8;
+
+        if (i == selected)
+        {
+            /* 选中项：画填充圆角矩形 + 白色文字 */
+            DrawRectangleRounded(
+                (Rectangle){ (float)(x - padX), (float)y - padY, (float)iw + padX * 2.0f, (float)(fs + padY * 2) },
+                0.2f, 8, selBg);
+            DrawText(items[i], x, y, fs, selText);
+        }
+        else
+        {
+            DrawText(items[i], x, y, fs, normText);
+        }
+    }
+
+    /* 底部提示 */
+    const char *hint = "Arrow Keys / W S  ->  Select   |   Enter  ->  Confirm";
+    int hs = 16;
+    int hw = MeasureText(hint, hs);
+    DrawText(hint, (winW - hw) / 2, winH - 50, hs, (Color){ 0x66, 0x66, 0x66, 0xFF });
+}
+
+/*
+* 绘制操作说明页
+* 列出全部按键及其功能，底部提示按 B 返回菜单。
+*/
+void DrawHowToPlay(void)
+{
+    int winW = GRID_SIZE * CELL_SIZE;
+    int winH = GRID_SIZE * CELL_SIZE;
+    ClearBackground((Color){ 0x12, 0x12, 0x12, 0xFF });
+
+    int y = 60;
+    int leftX = 100;
+    Color titleColor = { 0x42, 0xA5, 0xF5, 0xFF };
+    Color keyColor = (Color){ 0xE0, 0xE0, 0xE0, 0xFF };
+    Color descColor = (Color){ 0xA0, 0xA0, 0xA0, 0xFF };
+
+    DrawText("HOW TO PLAY", leftX, y, 36, titleColor);
+    y += 60;
+
+    static const struct { const char *key; const char *desc; } rows[] = {
+        { "WASD / Arrow Keys", "Move the snake (Up / Down / Left / Right)" },
+        { "Space / P",         "Pause / Resume the game" },
+        { "B",                 "Back to Main Menu" },
+        { "ESC",               "Exit the game" },
+        { "R (after death)",   "Restart the game" },
+    };
+    int count = sizeof(rows) / sizeof(rows[0]);
+
+    for (int i = 0; i < count; i++)
+    {
+        DrawText(rows[i].key,  leftX, y, 22, keyColor);
+        DrawText(rows[i].desc, leftX + 260, y, 20, descColor);
+        y += 38;
+    }
+
+    const char *hint = "Press B to return to Menu";
+    int hs = 16;
+    int hw = MeasureText(hint, hs);
+    DrawText(hint, (winW - hw) / 2, winH - 50, hs, (Color){ 0x66, 0x66, 0x66, 0xFF });
 }

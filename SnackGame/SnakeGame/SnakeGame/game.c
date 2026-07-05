@@ -44,33 +44,32 @@ Snake snake_create(int head_x, int head_y, int length, Direction dir)
 }
 
 /*
-* 驱动蛇移动一步
+* 驱动蛇移动一步（支持多食物）
 * 执行流程：
 *   1. 根据 next_dir 计算新蛇头坐标
 *   2. 将新蛇头插入链表头部
 *   3. 碰撞检测（撞墙 → 死亡）
-*   4. 判断是否吃到食物（是 → score+1，尾部保留；否 → 尾删）
+*   4. 遍历所有食物，判断是否吃到（是 → score+1，尾部保留，eaten_idx 记录；否 → 尾删）
 *   5. 自碰检测（撞自己 → 死亡）
 *
 * @param snake       蛇的指针
-* @param food_pos    当前食物的位置
-* @param ate         [出参] 是否吃到食物（true=吃到，false=没吃到）
+* @param foods       食物数组
+* @param food_count  食物数量
+* @param ate         [出参] 是否吃到食物
+* @param eaten_idx   [出参] 被吃食物的索引（未吃则为 -1）
 * @return            本步移动后蛇是否存活
 */
-bool snake_move(Snake *snake, Position food_pos, bool *ate)
+bool snake_move(Snake *snake, Food *foods, int food_count, bool *ate, int *eaten_idx)
 {
     if (snake == NULL || snake->body == NULL || !snake->alive)
         return false;
 
-    /* 置入方向为当前方向（next_dir 在外部由键盘设定） */
     snake->dir = snake->next_dir;
 
-    /* 从链表第一个有效结点（蛇头）获取当前坐标 */
     DCListNode *headNode = snake->body->next;
-    int head_x = headNode->data.x; 
+    int head_x = headNode->data.x;
     int head_y = headNode->data.y;
 
-    /* 根据方向计算新蛇头坐标 */
     switch (snake->dir)
     {
     case DIR_UP:    head_y--; break;
@@ -80,28 +79,42 @@ bool snake_move(Snake *snake, Position food_pos, bool *ate)
     }
 
     Position new_head_pos = { head_x, head_y };
-    DCListPushFront(snake->body, new_head_pos);  /* O(1) 头插新坐标 */
+    DCListPushFront(snake->body, new_head_pos);
 
-    /* 撞墙检测 */
     if (wall_collided(new_head_pos, GRID_SIZE))
     {
         snake->alive = false;
         return false;
     }
 
-    /* 吃食物 / 正常移动 */
-    if (new_head_pos.x == food_pos.x && new_head_pos.y == food_pos.y)
+    /* 遍历所有食物，检查新蛇头是否命中 */
+    bool found = false;
+    int hit_idx = -1;
+    for (int i = 0; i < food_count; i++)
     {
-        if (ate != NULL) *ate = true;
-        snake->score++;              /* 吃到 → 分数+1，不删尾 → 变长 */
+        if (foods[i].active
+         && new_head_pos.x == foods[i].pos.x
+         && new_head_pos.y == foods[i].pos.y)
+        {
+            found = true;
+            hit_idx = i;
+            break;
+        }
+    }
+
+    if (found)
+    {
+        if (ate != NULL)       *ate = true;
+        if (eaten_idx != NULL) *eaten_idx = hit_idx;
+        snake->score++;              /* 吃到 → 不删尾 → 变长 */
     }
     else
     {
-        if (ate != NULL) *ate = false;
-        DCListPopBack(snake->body);  /* O(1) 没吃到 → 删尾，保持长度不变 */
+        if (ate != NULL)       *ate = false;
+        if (eaten_idx != NULL) *eaten_idx = -1;
+        DCListPopBack(snake->body);  /* 没吃到 → 删尾，保持长度 */
     }
 
-    /* 自碰检测（新蛇头是否与蛇身重叠） */
     if (self_collided(snake))
     {
         snake->alive = false;
@@ -151,21 +164,18 @@ bool self_collided(Snake *snake)
 }
 
 /*
-* 在空白位置随机生成食物
-* 循环生成随机坐标，直到坐标不在蛇身上为止（避免食物和蛇重叠）。
-* 设有最大尝试次数 grid_size^2，防止极端情况（蛇几乎占满网格）时死循环。
+* 在空白位置随机生成一个食物（内部辅助函数）
+* 循环生成随机坐标，直到坐标不在蛇身上且不与其他食物重叠。
 * 首次调用时会用 time(NULL) 初始化随机种子。
 *
-* @param food_pos   [出参] 生成的食物位置
-* @param snake      蛇的指针（用于判断碰撞）
-* @param grid_size  网格大小
+* @param food        [出参] 要设置的食物
+* @param snake       蛇的指针
+* @param all_foods   全部食物数组（用于排除重叠）
+* @param food_count  食物总数
+* @param grid_size   网格大小
 */
-void generate_food(Position *food_pos, Snake *snake, int grid_size)
+static void gen_one_food(Food *food, Snake *snake, Food *all_foods, int food_count, int grid_size)
 {
-    if (food_pos == NULL || snake == NULL || snake->body == NULL)
-        return;
-
-    /* 惰性初始化随机种子（只执行一次） */
     static int seeded = 0;
     if (!seeded)
     {
@@ -178,12 +188,55 @@ void generate_food(Position *food_pos, Snake *snake, int grid_size)
 
     do
     {
-        food_pos->x = rand() % grid_size;
-        food_pos->y = rand() % grid_size;
+        food->pos.x = rand() % grid_size;
+        food->pos.y = rand() % grid_size;
         attempts++;
     }
-    while (DCListContains(snake->body, food_pos->x, food_pos->y)
+    while (DCListContains(snake->body, food->pos.x, food->pos.y)
         && attempts < max_attempts);
+
+    /* 确保不与其他已激活食物重叠 */
+    for (int retry = 0; retry < max_attempts; retry++)
+    {
+        bool overlap = false;
+        for (int j = 0; j < food_count; j++)
+        {
+            if (&all_foods[j] == food || !all_foods[j].active) continue;
+            if (all_foods[j].pos.x == food->pos.x && all_foods[j].pos.y == food->pos.y)
+            {
+                overlap = true;
+                break;
+            }
+        }
+        if (!overlap && !DCListContains(snake->body, food->pos.x, food->pos.y))
+            break;
+        food->pos.x = rand() % grid_size;
+        food->pos.y = rand() % grid_size;
+    }
+
+    food->active = true;
+}
+
+/*
+* 一次性生成 food_count 个食物
+* 保证每个食物位置不在蛇身上且彼此不重叠。
+* 首次调用时用 time(NULL) 初始化随机种子。
+*/
+void generate_all_foods(Food *foods, int food_count, Snake *snake, int grid_size)
+{
+    for (int i = 0; i < food_count; i++)
+    {
+        gen_one_food(&foods[i], snake, foods, food_count, grid_size);
+    }
+}
+
+/*
+* 重新生成一个指定食物的位置
+* 当蛇吃到某个食物时调用，为该食物分配新空白位置。
+*/
+void regenerate_food(Food *food, Snake *snake, Food *all_foods, int food_count, int grid_size)
+{
+    gen_one_food(food, snake, all_foods, food_count, grid_size);
 }
 
 /*

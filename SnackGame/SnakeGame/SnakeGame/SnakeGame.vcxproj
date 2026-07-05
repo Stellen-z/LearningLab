@@ -137,12 +137,14 @@
   <ItemGroup>
     <ClCompile Include="DCList.c" />
     <ClCompile Include="game.c" />
+    <ClCompile Include="state.c" />
     <ClCompile Include="render.c" />
     <ClCompile Include="main.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="DCList.h" />
     <ClInclude Include="game.h" />
+    <ClInclude Include="state.h" />
     <ClInclude Include="render.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -140,8 +140,10 @@
     </ClCompile>
     <ClCompile Include="test_list.cpp" />
     <ClCompile Include="test_game.cpp" />
+    <ClCompile Include="test_state.cpp" />
     <ClCompile Include="..\DCList.c" />
     <ClCompile Include="..\game.c" />
+    <ClCompile Include="..\state.c" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

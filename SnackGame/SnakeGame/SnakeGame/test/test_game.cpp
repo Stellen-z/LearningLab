@@ -5,6 +5,13 @@ extern "C" {
 #include "DCList.h"
 }
 
+/* helper: create a food array for single-food test */
+static Food make_single_food(int x, int y)
+{
+    Food f = { { x, y }, true };
+    return f;
+}
+
 TEST(GameTest, SnakeCreate)
 {
     Snake snake = snake_create(10, 10, 3, DIR_RIGHT);
@@ -44,12 +51,14 @@ TEST(GameTest, SnakeMoveRight)
     Snake snake = snake_create(10, 10, 3, DIR_RIGHT);
     snake.next_dir = DIR_RIGHT;
 
-    Position food = { -1, -1 };
+    Food foods[1] = { make_single_food(-1, -1) };
     bool ate = false;
-    bool alive = snake_move(&snake, food, &ate);
+    int eaten_idx = -1;
+    bool alive = snake_move(&snake, foods, 1, &ate, &eaten_idx);
 
     EXPECT_TRUE(alive);
     EXPECT_FALSE(ate);
+    EXPECT_EQ(eaten_idx, -1);
 
     DCListNode *head = snake.body->next;
     EXPECT_EQ(head->data.x, 11);
@@ -63,9 +72,10 @@ TEST(GameTest, SnakeMoveNoEatLengthUnchanged)
     Snake snake = snake_create(5, 5, 3, DIR_DOWN);
     snake.next_dir = DIR_DOWN;
 
-    Position food = { 99, 99 };
+    Food foods[1] = { make_single_food(99, 99) };
     bool ate = true;
-    snake_move(&snake, food, &ate);
+    int eaten_idx = -1;
+    snake_move(&snake, foods, 1, &ate, &eaten_idx);
 
     EXPECT_FALSE(ate);
     DCListDestroy(snake.body);
@@ -76,11 +86,13 @@ TEST(GameTest, SnakeMoveEatFood)
     Snake snake = snake_create(10, 10, 3, DIR_RIGHT);
     snake.next_dir = DIR_RIGHT;
 
-    Position food = { 11, 10 };
+    Food foods[1] = { make_single_food(11, 10) };
     bool ate = false;
-    snake_move(&snake, food, &ate);
+    int eaten_idx = -1;
+    snake_move(&snake, foods, 1, &ate, &eaten_idx);
 
     EXPECT_TRUE(ate);
+    EXPECT_EQ(eaten_idx, 0);
     EXPECT_EQ(snake.score, 1);
 
     DCListNode *tail = snake.body->prev;
@@ -163,21 +175,56 @@ TEST(GameTest, SelfCollisionCircularBody)
     DCListDestroy(snake.body);
 }
 
-TEST(GameTest, FoodNotOnSnake)
+TEST(GameTest, FoodAllNotOnSnake)
 {
     Snake snake = snake_create(5, 5, 3, DIR_RIGHT);
-    for (int i = 0; i < 50; i++)
+
+    Food foods[FOOD_COUNT] = { 0 };
+    generate_all_foods(foods, FOOD_COUNT, &snake, GRID_SIZE);
+
+    for (int i = 0; i < FOOD_COUNT; i++)
     {
-        Position food = { -1, -1 };
-        generate_food(&food, &snake, GRID_SIZE);
-
-        EXPECT_GE(food.x, 0);
-        EXPECT_LT(food.x, GRID_SIZE);
-        EXPECT_GE(food.y, 0);
-        EXPECT_LT(food.y, GRID_SIZE);
-
-        EXPECT_FALSE(DCListContains(snake.body, food.x, food.y));
+        EXPECT_TRUE(foods[i].active);
+        EXPECT_GE(foods[i].pos.x, 0);
+        EXPECT_LT(foods[i].pos.x, GRID_SIZE);
+        EXPECT_GE(foods[i].pos.y, 0);
+        EXPECT_LT(foods[i].pos.y, GRID_SIZE);
+        EXPECT_FALSE(DCListContains(snake.body, foods[i].pos.x, foods[i].pos.y));
     }
+
+    /* verify no two foods at same position */
+    for (int i = 0; i < FOOD_COUNT; i++)
+    {
+        for (int j = i + 1; j < FOOD_COUNT; j++)
+        {
+            EXPECT_FALSE(foods[i].pos.x == foods[j].pos.x
+                      && foods[i].pos.y == foods[j].pos.y);
+        }
+    }
+
+    DCListDestroy(snake.body);
+}
+
+TEST(GameTest, RegenerateFoodNotOnSnake)
+{
+    Snake snake = snake_create(5, 5, 3, DIR_RIGHT);
+
+    Food foods[FOOD_COUNT] = { 0 };
+    generate_all_foods(foods, FOOD_COUNT, &snake, GRID_SIZE);
+
+    /* regenerate the first food and verify it's valid */
+    regenerate_food(&foods[0], &snake, foods, FOOD_COUNT, GRID_SIZE);
+
+    EXPECT_TRUE(foods[0].active);
+    EXPECT_FALSE(DCListContains(snake.body, foods[0].pos.x, foods[0].pos.y));
+
+    /* verify no overlap with other foods */
+    for (int j = 1; j < FOOD_COUNT; j++)
+    {
+        EXPECT_FALSE(foods[0].pos.x == foods[j].pos.x
+                  && foods[0].pos.y == foods[j].pos.y);
+    }
+
     DCListDestroy(snake.body);
 }
 
@@ -197,9 +244,10 @@ TEST(GameTest, SnakeMoveIntoWall)
     Snake snake = snake_create(0, 0, 3, DIR_LEFT);
     snake.next_dir = DIR_LEFT;
 
-    Position food = { -1, -1 };
+    Food foods[1] = { make_single_food(-1, -1) };
     bool ate = false;
-    bool alive = snake_move(&snake, food, &ate);
+    int eaten_idx = -1;
+    bool alive = snake_move(&snake, foods, 1, &ate, &eaten_idx);
 
     EXPECT_FALSE(alive);
     EXPECT_FALSE(snake.alive);
@@ -213,13 +261,13 @@ TEST(GameTest, ScoreIncrementOnEat)
     snake.next_dir = DIR_RIGHT;
     EXPECT_EQ(snake.score, 0);
 
-    Position food = { 6, 5 };
-    snake_move(&snake, food, NULL);
+    Food foods1[1] = { make_single_food(6, 5) };
+    snake_move(&snake, foods1, 1, NULL, NULL);
     EXPECT_EQ(snake.score, 1);
 
-    food.x = 7; food.y = 5;
     snake.next_dir = DIR_RIGHT;
-    snake_move(&snake, food, NULL);
+    Food foods2[1] = { make_single_food(7, 5) };
+    snake_move(&snake, foods2, 1, NULL, NULL);
     EXPECT_EQ(snake.score, 2);
 
     DCListDestroy(snake.body);
