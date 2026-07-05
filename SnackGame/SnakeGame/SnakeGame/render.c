@@ -295,51 +295,48 @@ void DrawMenu(int selected)
 {
     int winW = GRID_SIZE * CELL_SIZE;
     int winH = GRID_SIZE * CELL_SIZE;
-    Color bgColor = (Color){ 0x12, 0x12, 0x12, 0xFF };
-
-    ClearBackground(bgColor);
+    Font font = GetSidebarFont();
+    ClearBackground((Color){ 0x12, 0x12, 0x12, 0xFF });
 
     const char *title = "SNAKE GAME";
     int titleSize = 52;
-    int tw = MeasureText(title, titleSize);
-    DrawText(title, (winW - tw) / 2, 100, titleSize, (Color){ 0x42, 0xA5, 0xF5, 0xFF });
+    Vector2 titleSz = MeasureTextEx(font, title, (float)titleSize, 0);
+    DrawTextEx(font, title, (Vector2){ (winW - titleSz.x) / 2.0f, 100 }, (float)titleSize, 0, (Color){ 0x42, 0xA5, 0xF5, 0xFF });
 
     const char *items[] = { "Play", "How to Play", "Exit" };
     int itemCount = 3;
     int startY = 250;
     int itemGap = 55;
-    Color selBg = { 0xFF, 0xB3, 0x00, 0xFF };     /* 选中项背景色：琥珀 */
-    Color selText = WHITE;                          /* 选中项文字 */
-    Color normText = { 0x90, 0x90, 0x90, 0xFF };    /* 未选中项文字 */
+    Color selBg = { 0xFF, 0xB3, 0x00, 0xFF };
+    Color selText = WHITE;
+    Color normText = { 0x90, 0x90, 0x90, 0xFF };
 
     for (int i = 0; i < itemCount; i++)
     {
         int y = startY + i * itemGap;
         int fs = 28;
-        int iw = MeasureText(items[i], fs);
-        int x = (winW - iw) / 2;
+        Vector2 isz = MeasureTextEx(font, items[i], (float)fs, 0);
+        int x = (int)((winW - isz.x) / 2.0f);
         int padX = 24;
         int padY = 8;
 
         if (i == selected)
         {
-            /* 选中项：画填充圆角矩形 + 白色文字 */
             DrawRectangleRounded(
-                (Rectangle){ (float)(x - padX), (float)y - padY, (float)iw + padX * 2.0f, (float)(fs + padY * 2) },
+                (Rectangle){ (float)(x - padX), (float)y - padY, isz.x + padX * 2.0f, (float)(fs + padY * 2) },
                 0.2f, 8, selBg);
-            DrawText(items[i], x, y, fs, selText);
+            DrawTextEx(font, items[i], (Vector2){ (float)x, (float)y }, (float)fs, 0, selText);
         }
         else
         {
-            DrawText(items[i], x, y, fs, normText);
+            DrawTextEx(font, items[i], (Vector2){ (float)x, (float)y }, (float)fs, 0, normText);
         }
     }
 
-    /* 底部提示 */
     const char *hint = "Arrow Keys / W S  ->  Select   |   Enter  ->  Confirm";
     int hs = 16;
-    int hw = MeasureText(hint, hs);
-    DrawText(hint, (winW - hw) / 2, winH - 50, hs, (Color){ 0x66, 0x66, 0x66, 0xFF });
+    Vector2 hintSz = MeasureTextEx(font, hint, (float)hs, 0);
+    DrawTextEx(font, hint, (Vector2){ (winW - hintSz.x) / 2.0f, (float)(winH - 50) }, (float)hs, 0, (Color){ 0x66, 0x66, 0x66, 0xFF });
 }
 
 /*
@@ -350,6 +347,7 @@ void DrawHowToPlay(void)
 {
     int winW = GRID_SIZE * CELL_SIZE;
     int winH = GRID_SIZE * CELL_SIZE;
+    Font font = GetSidebarFont();
     ClearBackground((Color){ 0x12, 0x12, 0x12, 0xFF });
 
     int y = 60;
@@ -358,7 +356,7 @@ void DrawHowToPlay(void)
     Color keyColor = (Color){ 0xE0, 0xE0, 0xE0, 0xFF };
     Color descColor = (Color){ 0xA0, 0xA0, 0xA0, 0xFF };
 
-    DrawText("HOW TO PLAY", leftX, y, 36, titleColor);
+    DrawTextEx(font, "HOW TO PLAY", (Vector2){ (float)leftX, (float)y }, 36, 0, titleColor);
     y += 60;
 
     static const struct { const char *key; const char *desc; } rows[] = {
@@ -372,13 +370,13 @@ void DrawHowToPlay(void)
 
     for (int i = 0; i < count; i++)
     {
-        DrawText(rows[i].key,  leftX, y, 22, keyColor);
-        DrawText(rows[i].desc, leftX + 260, y, 20, descColor);
+        DrawTextEx(font, rows[i].key,  (Vector2){ (float)leftX, (float)y }, 22, 0, keyColor);
+        DrawTextEx(font, rows[i].desc, (Vector2){ (float)(leftX + 260), (float)y }, 20, 0, descColor);
         y += 38;
     }
 
     const char *hint = "Press B to return to Menu";
     int hs = 16;
-    int hw = MeasureText(hint, hs);
-    DrawText(hint, (winW - hw) / 2, winH - 50, hs, (Color){ 0x66, 0x66, 0x66, 0xFF });
+    Vector2 hintSz = MeasureTextEx(font, hint, (float)hs, 0);
+    DrawTextEx(font, hint, (Vector2){ (winW - hintSz.x) / 2.0f, (float)(winH - 50) }, (float)hs, 0, (Color){ 0x66, 0x66, 0x66, 0xFF });
 }
