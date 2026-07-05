@@ -31,8 +31,8 @@ x64/
 # NuGet packages (restored during build)
 packages/
 
-# Solution files
-*.slnx
+# Runtime data files
+*.dat
 
 # IDE
 .settings/
