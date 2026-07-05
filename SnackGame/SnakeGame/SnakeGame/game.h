@@ -45,7 +45,8 @@ typedef struct {
 
 typedef struct {
     Position pos;        /* 食物在网格中的坐标 */
-    bool active;         /* 是否有效（保留字段，当前始终为 true） */
+    Color color;         /* 食物颜色（随机分配） */
+    bool active;         /* 是否有效 */
 } Food;
 
 /* ── 游戏总控结构体 ── */

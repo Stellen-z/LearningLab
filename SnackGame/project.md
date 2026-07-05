@@ -25,7 +25,7 @@
 | **背景** | #121212 深色 |
 | **蛇头** | #0D47A1 深蓝，圆角方块，带白色眼球 + 黑色瞳孔 + 嘴巴弧线（表情随方向变化） |
 | **蛇身** | #42A5F5 天蓝，圆角方块 |
-| **食物** | #FFD740 金黄色方块 |
+| **食物** | 彩色正圆形（半径 13px），15 种随机配色：红/橙/金/绿/青/蓝/紫/粉/薄荷/黄/青柠/海蓝/珊瑚/浅蓝/薰衣草 |
 | **网格线** | #555555 中灰半透明（56% 不透明度），1px |
 | **侧边栏背景** | #1A1A1A 暗黑 |
 | **侧边栏文字** | Verdana 96px 加载，区块分色：SCORE 琥珀 / HIGH SCORE 橙红 / SPEED 翠绿 / 操作提示 紫色 |
@@ -210,9 +210,11 @@ bool        DCListContains(DCListNode* L, int x, int y);
 
 ```c
 // game.h
+#define FOOD_COUNT 15          /* 网格常驻食物数 */
 typedef struct {
-    Position pos;
-    bool active;
+    Position pos;              /* 食物在网格中的坐标 */
+    Color color;               /* 食物颜色（15 种随机配色之一） */
+    bool active;               /* 是否有效 */
 } Food;
 ```
 
@@ -245,14 +247,11 @@ typedef struct {
 } Snake;
 
 typedef struct {
-    Snake snake;
-    Food food;
-    GameState state;
-    int selected_menu;
+    Snake snake;                     /* 蛇的数据 */
+    Food foods[FOOD_COUNT];          /* 15 个食物 */
 
-    // 计时与速度
-    float move_timer;
-    float move_interval;
+    float move_timer;                /* 移动累计计时器（每秒累加 GetFrameTime()） */
+    float move_interval;             /* 移动触发间隔（秒） */
 
     // 音效
     Sound eat_sound;
@@ -302,10 +301,10 @@ typedef struct {
 
 **游戏逻辑（game.h/c）**：
 - [x] `Snake snake_create(int head_x, int head_y, int length, Direction dir)`
-- [x] `bool snake_move(Snake *snake, Position food_pos, bool *ate)` — 头插新坐标 + 条件尾删
+- [x] `bool snake_move(Snake *snake, Food *foods, int food_count, bool *ate, int *eaten_idx)` — 头插新坐标 + 条件尾删 + 多食物碰撞
 - [x] `bool wall_collided(Position pos, int grid_size)`
 - [x] `bool self_collided(Snake *snake)` — 新蛇头坐标是否与蛇身重叠（不含自身）
-- [x] `void generate_food(Position *food_pos, Snake *snake, int grid_size)`
+- [x] `void generate_all_foods(Food *foods, int food_count, Snake *snake, int grid_size)` — 批量生成多个食物
 - [x] `float get_move_interval(int score)` — 基础 0.2s，每 3 分减 0.02s，最低 0.06s
 
 **gtest 测试**：
@@ -380,7 +379,7 @@ while (!WindowShouldClose()) {
 
 **gtest 测试**：
 - [x] `test/test_state.cpp` 6 个用例（exit/enter 顺序、同状态跳过、update 路由、NULL 安全、完整流转）
-- [x] 回归测试 36/36 PASSED
+- [x] 回归测试 37/37 PASSED
 
 - [x] **手动确认**：MENU→PLAYING→PAUSED→PLAYING→GAME_OVER→MENU→HOW_TO_PLAY→MENU→EXIT 完整流程可走通，音效正常
 
@@ -390,7 +389,8 @@ while (!WindowShouldClose()) {
 - [x] 食物不生成在蛇身上验证（generate_food 循环检查）
 - [x] `high_score_updated` 标志位处理
 - [x] 代码全面添加详细中文注释
-- [x] 回归测试：gtest 36 用例全部通过
+- [x] 回归测试：gtest 37 用例全部通过
+- [x] 菜单+说明页字体统一为 Verdana，全窗口 840px 居中
 - [ ] 代码风格统一（缩进/命名/宏定义）
 - [ ] 最终手动游玩测试（走通全流程 + 连续玩 5+ 分钟无崩溃）
 

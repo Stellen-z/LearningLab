@@ -160,14 +160,12 @@ void DrawSnake(DCListNode *body, Direction dir)
 */
 void DrawFoods(Food *foods, int count)
 {
-    Color foodColor = { 0xFF, 0xD7, 0x40, 0xFF };
     for (int i = 0; i < count; i++)
     {
         if (!foods[i].active) continue;
-        float px = (float)(foods[i].pos.x * CELL_SIZE + CELL_PADDING);
-        float py = (float)(foods[i].pos.y * CELL_SIZE + CELL_PADDING);
-        float size = (float)(CELL_SIZE - CELL_PADDING * 2);
-        DrawRectangleRounded((Rectangle){ px, py, size, size }, CELL_ROUNDNESS, 8, foodColor);
+        float cx = foods[i].pos.x * CELL_SIZE + CELL_SIZE / 2.0f;
+        float cy = foods[i].pos.y * CELL_SIZE + CELL_SIZE / 2.0f;
+        DrawCircleV((Vector2){ cx, cy }, 13, foods[i].color);
     }
 }
 
