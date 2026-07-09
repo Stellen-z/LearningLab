@@ -140,7 +140,7 @@ SnackGame/
 │   │   │   └── gen_wav.ps1           # WAV 音效生成脚本
 │   │   ├── test/
 │   │   │   ├── test_list.cpp         # 链表 gtest 测试（9 用例）
-│   │   │   ├── test_game.cpp         # 游戏逻辑 gtest 测试（21 用例）
+│   │   │   ├── test_game.cpp         # 游戏逻辑 gtest 测试（22 用例）
 │   │   │   ├── test_state.cpp        # 状态机 gtest 测试（6 用例）
 │   │   │   ├── SnakeGame_Test.vcxproj # 测试独立项目
 │   │   │   └── googletest/           # gtest 1.15.2 源码（内嵌编译）
