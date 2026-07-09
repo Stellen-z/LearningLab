@@ -7,10 +7,10 @@
 
 /* ── 游戏常量 ── */
 
-#define GRID_SIZE  20    /* 网格大小：20×20 个格子 */
-#define CELL_SIZE  30    /* 每格像素数：30×30 px */
-#define INITIAL_LENGTH 3 /* 蛇初始长度（3 节） */
-#define FOOD_COUNT  15   /* 网格上常驻食物数量 */
+#define GRID_SIZE       20  /* 网格大小：20×20 个格子 */
+#define CELL_SIZE       30  /* 每格像素数：30×30 px */
+#define INITIAL_LENGTH   3  /* 蛇初始长度（3 节） */
+#define FOOD_COUNT      15  /* 网格上常驻食物数量 */
 
 /* ── 方向枚举 ── */
 

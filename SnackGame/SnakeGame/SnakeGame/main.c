@@ -301,8 +301,6 @@ int main(void)
         handlers[game.state].update(&game);
     }
 
-    /* 如果是菜单退出（case 2），game.state 被手动设为 GAME_OVER，直接退出循环 */
-
     /* 清理资源 */
     if (game.snake.body != NULL)
         DCListDestroy(game.snake.body);

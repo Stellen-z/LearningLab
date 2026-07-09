@@ -1,9 +1,17 @@
+/*
+* test_list.cpp — DCList 双向循环链表测试
+* 测试带头结点的双向循环链表全部核心 API，
+* 验证链表创建、增删、查询、判空、循环性等基础功能。
+* 链表以 Position {x, y} 为数据负载类型（DCLDataType）。
+*/
+
 #include <gtest/gtest.h>
 
 extern "C" {
 #include "DCList.h"
 }
 
+/* 创建并销毁链表，验证初始化后为空 */
 TEST(ListTest, CreateAndDestroy)
 {
     DCListNode *list = DCListInit();
@@ -12,6 +20,7 @@ TEST(ListTest, CreateAndDestroy)
     DCListDestroy(list);
 }
 
+/* 头插 3 个结点，验证链表顺序正确（后插的在前面） */
 TEST(ListTest, PushFront)
 {
     DCListNode *list = DCListInit();
@@ -39,6 +48,7 @@ TEST(ListTest, PushFront)
     DCListDestroy(list);
 }
 
+/* 尾插 3 个结点，验证尾部即为最后插入的结点 */
 TEST(ListTest, PushBack)
 {
     DCListNode *list = DCListInit();
@@ -60,6 +70,7 @@ TEST(ListTest, PushBack)
     DCListDestroy(list);
 }
 
+/* 尾插后尾删一次，验证新尾部正确 */
 TEST(ListTest, PopBack)
 {
     DCListNode *list = DCListInit();
@@ -78,6 +89,7 @@ TEST(ListTest, PopBack)
     DCListDestroy(list);
 }
 
+/* 尾插后头删一次，验证新头部正确 */
 TEST(ListTest, PopFront)
 {
     DCListNode *list = DCListInit();
@@ -96,6 +108,7 @@ TEST(ListTest, PopFront)
     DCListDestroy(list);
 }
 
+/* 判空：空链表返回 true，插入后返回 false，删光后恢复 true */
 TEST(ListTest, IsEmpty)
 {
     DCListNode *list = DCListInit();
@@ -111,6 +124,7 @@ TEST(ListTest, IsEmpty)
     DCListDestroy(list);
 }
 
+/* 包含检测：插入的坐标返回 true，不存在的坐标返回 false */
 TEST(ListTest, Contains)
 {
     DCListNode *list = DCListInit();
@@ -127,6 +141,7 @@ TEST(ListTest, Contains)
     DCListDestroy(list);
 }
 
+/* 循环性：哨兵的前驱的后继 = 哨兵，哨兵的后继的前驱 = 哨兵 */
 TEST(ListTest, Circular)
 {
     DCListNode *list = DCListInit();
@@ -143,6 +158,7 @@ TEST(ListTest, Circular)
     DCListDestroy(list);
 }
 
+/* 混合操作：尾插 5 → 尾删 3 → 头插 1，验证最终链表状态 */
 TEST(ListTest, MixedPushPop)
 {
     DCListNode *list = DCListInit();

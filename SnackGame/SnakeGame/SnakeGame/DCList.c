@@ -99,7 +99,7 @@ void DCListPrint(DCListNode* L)
 
 /*
 * 在 pos 结点之后插入值为 x 的新结点
-* @param pos  插 在此结点之后插入）
+* @param pos  插入位置（在此结点之后插入）
 * @param x    要插入的坐标数据
 * 说明：插入操作涉及4个指针的修改——新结点的 prev/next 和
 *       相邻结点的 prev/next。需注意赋值顺序，避免断链。

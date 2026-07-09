@@ -1,3 +1,9 @@
+/*
+* test_state.cpp — 状态机框架测试
+* 测试 state.h/c 的回调注册、状态切换、enter/exit 顺序、
+* update 路由、NULL 安全性和完整流转流程。
+*/
+
 #include <gtest/gtest.h>
 
 extern "C" {
@@ -5,16 +11,20 @@ extern "C" {
 #include "game.h"
 }
 
-/* ── 辅助变量：记录回调被调用状态 ── */
+/*
+* 辅助计数器：用于验证回调函数的调用状态。
+* g_enter/update/exit_count：被调用次数
+* g_enter/exit_order：调用顺序（用于验证 exit 先于 enter）
+* g_call_order：全局递增序号
+*/
 static int g_enter_count = 0;
 static int g_update_count = 0;
 static int g_exit_count = 0;
-static GameState g_last_enter_state = MENU;
-static GameState g_last_exit_state = MENU;
 static int g_call_order = 0;
 static int g_enter_order = 0;
 static int g_exit_order = 0;
 
+/* 重置所有计数器到 0（每个测试用例调用一次） */
 static void reset_counters(void)
 {
     g_enter_count = 0;
@@ -25,11 +35,12 @@ static void reset_counters(void)
     g_exit_order = 0;
 }
 
+/* 三个测试用的回调函数，每次调用递增对应计数器并记录顺序 */
 static void test_enter(SnakeGame *game) { (void)game; g_enter_count++; g_enter_order = ++g_call_order; }
 static void test_update(SnakeGame *game) { (void)game; g_update_count++; }
 static void test_exit(SnakeGame *game)  { (void)game; g_exit_count++; g_exit_order = ++g_call_order; }
 
-/* 用例 1：A→B 切换时 exit 和 enter 都被调一次 */
+/* MENU→PLAYING 切换时，旧状态 exit 和新状态 enter 各被调用一次 */
 TEST(StateTest, ChangeStateCallsExitAndEnter)
 {
     reset_counters();
@@ -47,7 +58,7 @@ TEST(StateTest, ChangeStateCallsExitAndEnter)
     EXPECT_EQ(g_enter_count, 1);
 }
 
-/* 用例 2：exit 在 enter 之前调用 */
+/* 旧 exit 在新 enter 之前调用（验证顺序正确） */
 TEST(StateTest, ExitBeforeEnter)
 {
     reset_counters();
@@ -64,7 +75,7 @@ TEST(StateTest, ExitBeforeEnter)
     EXPECT_LT(g_exit_order, g_enter_order);
 }
 
-/* 用例 3：切换到当前状态不触发 exit/enter */
+/* 切换到当前状态不触发任何回调 */
 TEST(StateTest, SameStateNoop)
 {
     reset_counters();

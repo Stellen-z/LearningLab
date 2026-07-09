@@ -207,7 +207,7 @@ static void gen_one_food(Food *food, Snake *snake, Food *all_foods, int food_cou
         attempts++;
     }
     while (DCListContains(snake->body, food->pos.x, food->pos.y)
-        && attempts < max_attempts);
+           && attempts < max_attempts);
 
     /* 确保不与其他已激活食物重叠 */
     for (int retry = 0; retry < max_attempts; retry++)
@@ -285,7 +285,7 @@ float get_move_interval(int score)
 * 文件格式为单行纯数字，若文件不存在或格式错误则返回 0。
 *
 * @param filename   最高分文件路径
-* @return           读取到的最高分，失败返回 0 
+ * @return           读取到的最高分，失败返回 0
 */
 int load_high_score(const char *filename)
 {

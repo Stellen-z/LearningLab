@@ -2,13 +2,10 @@
 #include "raylib.h"
 
 /* ── 网格常量 ── */
-#define CELL_SIZE 30         /* 每格像素数 */
 #define CELL_PADDING 1       /* 图形内缩（不让相邻格贴死） */
 #define CELL_ROUNDNESS 0.3f  /* 圆角比例（0=直角, 1=正圆） */
-
-/* ── 侧边栏常量 ── */
+#define SIDEBAR_W 240        /* 侧边栏宽度 */
 #define SIDEBAR_X (GRID_SIZE * CELL_SIZE)      /* 侧边栏起始 x（紧接网格右缘） */
-#define SIDEBAR_W 240                          /* 侧边栏宽度 */
 #define SIDEBAR_CX (SIDEBAR_X + SIDEBAR_W / 2)  /* 侧边栏水平中线 x */
 
 /*
@@ -154,9 +151,10 @@ void DrawSnake(DCListNode *body, Direction dir)
 }
 
 /*
-* 绘制食物
-* 金黄色圆角方块，醒目易识别。
-* @param pos  食物的网格坐标
+* 绘制全部食物（彩色正圆形）
+* 遍历食物数组，用 DrawCircle 以食物自身颜色渲染。
+* @param foods  食物数组
+* @param count  食物数量
 */
 void DrawFoods(Food *foods, int count)
 {
