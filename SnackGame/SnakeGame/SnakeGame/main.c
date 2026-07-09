@@ -272,10 +272,15 @@ int main(void)
     game.high_score = load_high_score("highscore.dat");
     game.high_score_updated = false;
 
-    /* 加载音效 */
-    game.eat_sound  = LoadSound("resource/eat.wav");
-    game.die_sound  = LoadSound("resource/die.wav");
-    game.menu_sound = LoadSound("resource/menu.wav");
+    /* 加载音效（用 exe 所在目录拼路径，确保双击运行也能找到） */
+    const char *appDir = GetApplicationDirectory();
+    char path[256];
+    sprintf_s(path, sizeof(path), "%sresource/eat.wav", appDir);
+    game.eat_sound  = LoadSound(path);
+    sprintf_s(path, sizeof(path), "%sresource/die.wav", appDir);
+    game.die_sound  = LoadSound(path);
+    sprintf_s(path, sizeof(path), "%sresource/menu.wav", appDir);
+    game.menu_sound = LoadSound(path);
 
     /* ── 注册 5 个状态处理器 ── */
     StateHandler menuHandler     = { menu_enter, menu_update, menu_exit };
