@@ -152,4 +152,7 @@
     <Import Project="..\packages\raylib.5.5.0\build\native\raylib.targets" Condition="Exists('..\packages\raylib.5.5.0\build\native\raylib.targets')" />
     <!-- gtest 将在独立测试项目中引用，Phase G1 时添加 -->
   </ImportGroup>
+  <Target Name="CopyResources" AfterTargets="Build">
+    <Exec Command="xcopy /Y /I &quot;$(ProjectDir)resource\*&quot; &quot;$(OutDir)resource\&quot;" />
+  </Target>
 </Project>
