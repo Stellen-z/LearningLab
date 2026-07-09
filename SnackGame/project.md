@@ -379,7 +379,7 @@ while (!WindowShouldClose()) {
 
 **gtest 测试**：
 - [x] `test/test_state.cpp` 6 个用例（exit/enter 顺序、同状态跳过、update 路由、NULL 安全、完整流转）
-- [x] 回归测试 37/37 PASSED
+- [x] 回归测试 41/41 PASSED
 
 - [x] **手动确认**：MENU→PLAYING→PAUSED→PLAYING→GAME_OVER→MENU→HOW_TO_PLAY→MENU→EXIT 完整流程可走通，音效正常
 
@@ -389,11 +389,11 @@ while (!WindowShouldClose()) {
 - [x] 食物不生成在蛇身上验证（generate_food 循环检查）
 - [x] `high_score_updated` 标志位处理
 - [x] 代码全面添加详细中文注释
-- [x] 回归测试：gtest 37 用例全部通过
+- [x] 回归测试：gtest 41 用例全部通过
 - [x] 菜单+说明页+PAUSED+GAME_OVER 字体统一为 Verdana，全窗口 840px 居中
 - [x] 食物改为彩色正圆形（15 色 DrawCircle）
-- [ ] 代码风格统一（缩进/命名/宏定义）
-- [ ] 最终手动游玩测试（走通全流程 + 连续玩 5+ 分钟无崩溃）
+- [x] 代码风格统一（缩进/命名/宏定义）
+- [x] 最终手动游玩测试（走通全流程 + 连续玩 5+ 分钟无崩溃）
 
 ---
 
