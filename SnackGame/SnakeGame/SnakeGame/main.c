@@ -3,15 +3,6 @@
 #include "render.h"
 #include "state.h"
 
-/* 判断两个方向是否相反（用于忽略反向输入） */
-static bool is_opposite(Direction a, Direction b)
-{
-    return (a == DIR_UP    && b == DIR_DOWN)  ||
-           (a == DIR_DOWN  && b == DIR_UP)    ||
-           (a == DIR_LEFT  && b == DIR_RIGHT) ||
-           (a == DIR_RIGHT && b == DIR_LEFT);
-}
-
 /* ────────────────────────────────────────────────────────────
  *  状态实现
  * ──────────────────────────────────────────────────────────── */

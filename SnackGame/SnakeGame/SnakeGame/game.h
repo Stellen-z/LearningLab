@@ -82,6 +82,9 @@ bool  wall_collided(Position pos, int grid_size);
 /* 检测蛇头是否与蛇身重叠（自碰） */
 bool  self_collided(Snake *snake);
 
+/* 判断两个方向是否相反 */
+bool  is_opposite(Direction a, Direction b);
+
 /* 一次性生成 food_count 个食物，保证不在蛇身上且彼此不重叠 */
 void  generate_all_foods(Food *foods, int food_count, Snake *snake, int grid_size);
 

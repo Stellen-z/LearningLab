@@ -84,6 +84,38 @@ TEST(GameTest, SnakeMoveNoEatLengthUnchanged)
     DCListDestroy(snake.body);
 }
 
+TEST(GameTest, OppositeUpDown)
+{
+    EXPECT_TRUE(is_opposite(DIR_UP, DIR_DOWN));
+    EXPECT_TRUE(is_opposite(DIR_DOWN, DIR_UP));
+}
+
+TEST(GameTest, OppositeLeftRight)
+{
+    EXPECT_TRUE(is_opposite(DIR_LEFT, DIR_RIGHT));
+    EXPECT_TRUE(is_opposite(DIR_RIGHT, DIR_LEFT));
+}
+
+TEST(GameTest, OppositeFalse)
+{
+    EXPECT_FALSE(is_opposite(DIR_UP, DIR_LEFT));
+    EXPECT_FALSE(is_opposite(DIR_UP, DIR_RIGHT));
+    EXPECT_FALSE(is_opposite(DIR_DOWN, DIR_LEFT));
+    EXPECT_FALSE(is_opposite(DIR_DOWN, DIR_RIGHT));
+    EXPECT_FALSE(is_opposite(DIR_LEFT, DIR_UP));
+    EXPECT_FALSE(is_opposite(DIR_LEFT, DIR_DOWN));
+    EXPECT_FALSE(is_opposite(DIR_RIGHT, DIR_UP));
+    EXPECT_FALSE(is_opposite(DIR_RIGHT, DIR_DOWN));
+}
+
+TEST(GameTest, SameDirNotOpposite)
+{
+    EXPECT_FALSE(is_opposite(DIR_UP, DIR_UP));
+    EXPECT_FALSE(is_opposite(DIR_DOWN, DIR_DOWN));
+    EXPECT_FALSE(is_opposite(DIR_LEFT, DIR_LEFT));
+    EXPECT_FALSE(is_opposite(DIR_RIGHT, DIR_RIGHT));
+}
+
 TEST(GameTest, SnakeMoveEatFood)
 {
     Snake snake = snake_create(10, 10, 3, DIR_RIGHT);

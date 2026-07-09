@@ -72,10 +72,10 @@ bool snake_move(Snake *snake, Food *foods, int food_count, bool *ate, int *eaten
 
     switch (snake->dir)
     {
-    case DIR_UP:    head_y--; break;
-    case DIR_DOWN:  head_y++; break;
-    case DIR_LEFT:  head_x--; break;
-    case DIR_RIGHT: head_x++; break;
+        case DIR_UP:    head_y--; break;
+        case DIR_DOWN:  head_y++; break;
+        case DIR_LEFT:  head_x--; break;
+        case DIR_RIGHT: head_x++; break;
     }
 
     Position new_head_pos = { head_x, head_y };
@@ -161,6 +161,20 @@ bool self_collided(Snake *snake)
     }
 
     return false;
+}
+
+/*
+* 判断两个方向是否相反
+* @param a  方向 A
+* @param b  方向 B
+* @return   true=相反（不能从 A 变到 B），false=不相反
+*/
+bool is_opposite(Direction a, Direction b)
+{
+    return (a == DIR_UP    && b == DIR_DOWN)  ||
+           (a == DIR_DOWN  && b == DIR_UP)    ||
+           (a == DIR_LEFT  && b == DIR_RIGHT) ||
+           (a == DIR_RIGHT && b == DIR_LEFT);
 }
 
 /*
@@ -271,7 +285,7 @@ float get_move_interval(int score)
 * 文件格式为单行纯数字，若文件不存在或格式错误则返回 0。
 *
 * @param filename   最高分文件路径
-* @return           读取到的最高分，失败返回 0
+* @return           读取到的最高分，失败返回 0 
 */
 int load_high_score(const char *filename)
 {
