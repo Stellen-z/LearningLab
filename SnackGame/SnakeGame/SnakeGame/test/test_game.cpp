@@ -8,7 +8,10 @@ extern "C" {
 /* helper: create a food array for single-food test */
 static Food make_single_food(int x, int y)
 {
-    Food f = { { x, y }, true };
+    Food f;
+    f.pos.x = x;
+    f.pos.y = y;
+    f.active = true;
     return f;
 }
 
