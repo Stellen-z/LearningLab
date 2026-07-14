@@ -45,3 +45,6 @@ packages/
 
 # Project files - these MUST be committed:
 # *.vcxproj, *.vcxproj.filters, *.slnx, packages.config
+*.xml
+*.wav
+*.ps1
