@@ -15,6 +15,12 @@ public:
     bool loadGame();   // 成功返回 true（读档后调用 run 继续）
     void run();        // 主循环，直到死亡 / 飞升 / 退出
 
+    // ---- 测试钩子：让单元测试能驱动内部回合与检查状态 ----
+    void debugEndTurn() { endTurn(); }
+    Player& debugPlayer() { return player_; }
+    std::vector<Monster>& debugMonsters() { return monsters_; }
+    Dungeon& debugDungeon() { return dungeon_; }
+
 private:
     // ---- 玩家动作（大多消耗一回合）----
     void handleMove(int dx, int dy);
