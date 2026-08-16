@@ -13,6 +13,7 @@
 #include "../src/combat.h"
 #include "../src/events.h"
 #include "../src/game.h"
+#include "../src/render.h"
 #include "../src/save.h"
 
 #include <algorithm>
@@ -761,6 +762,30 @@ TEST(combat_ai_and_fallbacks) {
     // 图鉴查询的未知 id 回退
     CHECK_EQ(eventDef(9999).id, eventDex().front().id);
     CHECK_EQ(monsterDef(9999).id, monsterDex().front().id);
+}
+
+// ================= render（非交互部分：绘制不读 stdin）=================
+
+TEST(render_hud_map_log) {
+    Rng::get().seed(701);
+    Game g;
+    g.newGame(L"画中人", Element::Jin);
+    Player& p = g.debugPlayer();
+
+    Renderer::clearScreen();
+    Renderer::drawHud(p, 3);
+
+    std::vector<char> explored;
+    Renderer::drawMap(GamePeer::dungeon(g), p, g.debugMonsters(),
+                      GamePeer::ground(g), false, explored);
+    // 天眼全图分支 + 迷雾记忆复用
+    Renderer::drawMap(GamePeer::dungeon(g), p, g.debugMonsters(),
+                      GamePeer::ground(g), true, explored);
+    Renderer::drawLog(GamePeer::logs(g));
+
+    // 画完世界照常运转
+    CHECK_EQ(GamePeer::over(g), false);
+    CHECK_GE(GamePeer::logs(g).size(), (size_t)2);
 }
 
 int main() {

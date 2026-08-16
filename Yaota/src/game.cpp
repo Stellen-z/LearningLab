@@ -41,17 +41,26 @@ bool Game::loadGame() {
     return true;
 }
 
-// 生成本层：先随机生成一次拿到出生房间，再用真正的出生点重新生成，
-// 保证妖怪不会贴脸刷新、楼梯离出生点足够远。
+// 生成本层：一次生成，玩家落在首个房间中心；
+// 离玩家太近的妖怪挪去最远房间（守着楼梯，正好当拦路妖）。
+// （旧实现生成两次、拿第一次的房间中心当出生点——第二次重生成后
+//   那里可能是山岩，玩家会卡在墙里出生。单元测试抓出来的。）
 void Game::setupFloor() {
     int f = player_.floor;
     dungeon_.generate(f, 2, 2);
+
     int sx = dungeon_.rooms()[0].cx();
     int sy = dungeon_.rooms()[0].cy();
-    dungeon_.generate(f, sx, sy);
-
     player_.x = sx;
     player_.y = sy;
+
+    for (auto& m : dungeon_.spawnedMonsters()) {
+        if (std::hypot(m.x - sx, m.y - sy) < 6) {
+            const Room& far = dungeon_.farthestRoomFrom(sx, sy);
+            m.x = m.homeX = far.cx();
+            m.y = m.homeY = far.cy();
+        }
+    }
 
     monsters_ = dungeon_.spawnedMonsters();
     dungeon_.spawnedMonsters().clear();
