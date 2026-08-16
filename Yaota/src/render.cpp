@@ -7,6 +7,7 @@
 #include "rng.h"
 
 #include <cmath>
+#include <cstdlib>
 #include <cwctype>
 #include <iostream>
 
@@ -32,7 +33,13 @@ std::wstring Renderer::promptLine(const std::wstring& prompt) {
     print(prompt, Color::Cyan);
     std::cout << " ";
     std::string line;
-    std::getline(std::cin, line);
+    if (!std::getline(std::cin, line)) {
+        // stdin 结束（管道输入耗尽 / 终端关闭）：视为玩家离场，干净退出。
+        // 否则主循环会拿到空输入无限重绘（脚本测试时曾刷出 6.9GB 输出）。
+        std::cout << "\n";
+        println(L"（输入流已尽，就此别过。）", Color::Dark);
+        std::exit(0);
+    }
     return utf8ToWstr(line);
 }
 
