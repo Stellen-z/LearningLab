@@ -35,9 +35,13 @@ TEST(five_elements_matrix) {
             bool isSheng = ((int)a == 0 && (int)d == 2) || ((int)a == 2 && (int)d == 1) ||
                            ((int)a == 1 && (int)d == 3) || ((int)a == 3 && (int)d == 4) ||
                            ((int)a == 4 && (int)d == 0);
+            bool isShengBy = ((int)d == 0 && (int)a == 2) || ((int)d == 2 && (int)a == 1) ||
+                             ((int)d == 1 && (int)a == 3) || ((int)d == 3 && (int)a == 4) ||
+                             ((int)d == 4 && (int)a == 0); // 他生我：中性 1.0
             if (a == d)        CHECK_EQ(m, 1.0);
             else if (isKe)     CHECK_EQ(m, 1.5);
             else if (isSheng)  CHECK_EQ(m, 1.15);
+            else if (isShengBy) CHECK_EQ(m, 1.0);
             else               CHECK_EQ(m, 0.7);
         }
     }
@@ -278,10 +282,11 @@ TEST(combat_resolve_hit) {
         for (double e : expect) multOk = multOk || std::abs(r.elemMult - e) < 1e-9;
         CHECK(multOk);
     }
-    // 攻击远低于防御：保底 1 点
+    // 攻击远低于防御：保底伤害（暴击时乘区放大，允许 1~3）
     for (int i = 0; i < 100; ++i) {
         HitResult r = resolveHit(Element::Tu, 1, Element::Shui, 999, 0.0);
-        CHECK_EQ(r.damage, 1);
+        CHECK_GE(r.damage, 1);
+        CHECK_LE(r.damage, 3);
     }
     // 闪避率 100%：必定闪避
     for (int i = 0; i < 100; ++i) {

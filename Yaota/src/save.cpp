@@ -14,7 +14,8 @@ static const char* SAVE_PATH = "yaota_save.txt";
 
 bool saveExists() {
     std::ifstream f(SAVE_PATH);
-    return f.good();
+    // 注意：MinGW libstdc++ 下打开失败时 good() 仍可能为 true，必须用 is_open()
+    return f.is_open();
 }
 
 bool saveToFile(const Player& p, int kills) {
