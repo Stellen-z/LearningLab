@@ -27,6 +27,7 @@
 #include <vector>
 
 #ifdef _WIN32
+#define NOMINMAX        // 不让 windows.h 定义 min/max 宏（会炸掉所有 std::min/std::max）
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>   // main.cpp 段的控制台初始化需要
 #endif
@@ -2626,6 +2627,7 @@ void Game::gameOver(bool ascended) {
 
 
 #ifdef _WIN32
+#define NOMINMAX        // 不让 windows.h 定义 min/max 宏（会炸掉所有 std::min/std::max）
 #define WIN32_LEAN_AND_MEAN
 #endif
 

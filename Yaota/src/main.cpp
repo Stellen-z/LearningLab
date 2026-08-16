@@ -7,6 +7,7 @@
 #include <iostream>
 
 #ifdef _WIN32
+#define NOMINMAX        // 阻止 windows.h 的 min/max 宏污染（会炸掉 std::min/std::max）
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #endif

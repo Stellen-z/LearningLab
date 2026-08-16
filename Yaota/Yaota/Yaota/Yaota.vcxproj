@@ -161,7 +161,6 @@
     <ClCompile Include="..\..\src\player.cpp" />
     <ClCompile Include="..\..\src\render.cpp" />
     <ClCompile Include="..\..\src\save.cpp" />
-    <ClCompile Include="..\..\yaota_all.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
