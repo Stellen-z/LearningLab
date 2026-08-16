@@ -143,6 +143,11 @@ for f in src/*.h src/*.cpp; do sed -e '/^#pragma once/d' -e '/^#include /d' "$f"
    修复：全部源文件加 UTF-8 BOM（g++ 与 MSVC 通吃）。附赠同款：
    `cmd.exe` 解析批处理也用 GBK——.bat 里的 UTF-8 中文注释同样会炸，
    所以 `build_msvc.bat` 全 ASCII。
+6. **单文件版 C2589（"::"右边非法标记）**：`yaota_all.cpp` 头部引了
+   `windows.h`，它的 `min`/`max` 宏污染后面所有 `std::min/std::max`
+   （多文件版无此问题：用 min/max 的 .cpp 不包含 windows.h）。
+   `#define NOMINMAX` 根治。Windows 头文件三件套防御：NOMINMAX、
+   WIN32_LEAN_AND_MEAN、别用 far/near 当变量名。
 
 ## 给 C++ 学习者的导览
 
