@@ -1,4 +1,4 @@
-// monsters_data.cpp —— 妖怪图鉴全表（32 种，从野狗妖到守层者）
+﻿// monsters_data.cpp —— 妖怪图鉴全表（32 种，从野狗妖到守层者）
 // 平衡设计：
 //   * exp/gold 大致跟 hp+atk 走，深层妖更肥
 //   * ai 决定行为：Brave 追得远打得狠，Coward 会逃，Guard 只守房间，Sneaky 闪避高

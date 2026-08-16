@@ -1,4 +1,4 @@
-// player.h —— 玩家：属性、境界、背包、装备
+﻿// player.h —— 玩家：属性、境界、背包、装备
 #pragma once
 
 #include "types.h"

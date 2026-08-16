@@ -1,4 +1,4 @@
-// render.h —— 控制台渲染：汉字地图、状态栏、行事录、菜单
+﻿// render.h —— 控制台渲染：汉字地图、状态栏、行事录、菜单
 #pragma once
 
 #include "types.h"

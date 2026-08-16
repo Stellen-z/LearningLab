@@ -1,4 +1,4 @@
-// test_framework.h —— 自制迷你单元测试框架（零依赖，纯标准库）
+﻿// test_framework.h —— 自制迷你单元测试框架（零依赖，纯标准库）
 // 用法：
 //   TEST(用例名) { CHECK(x == 1); CHECK_EQ(f(), 2); }
 //   int main() { return tf::runAll(); }

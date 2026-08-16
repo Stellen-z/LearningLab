@@ -1,4 +1,4 @@
-// game.h —— 游戏总控：把所有系统粘成"一局游戏"
+﻿// game.h —— 游戏总控：把所有系统粘成"一局游戏"
 #pragma once
 
 #include "player.h"

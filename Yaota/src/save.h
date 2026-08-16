@@ -1,4 +1,4 @@
-// save.h —— 存档：玩家状态 + 层数（地图为重新生成，见 save.cpp 注释）
+﻿// save.h —— 存档：玩家状态 + 层数（地图为重新生成，见 save.cpp 注释）
 #pragma once
 
 #include "player.h"

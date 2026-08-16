@@ -1,4 +1,4 @@
-// tests/smoke.cpp —— 分步冒烟测试：stderr 无缓冲打印，定位崩溃点
+﻿// tests/smoke.cpp —— 分步冒烟测试：stderr 无缓冲打印，定位崩溃点
 #include "render.h"
 #include "game.h"
 #include "save.h"

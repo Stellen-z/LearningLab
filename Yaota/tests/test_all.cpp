@@ -1,4 +1,4 @@
-// test_all.cpp —— 《妖塔》全量单元测试
+﻿// test_all.cpp —— 《妖塔》全量单元测试
 // 覆盖目标：types(五行/境界) / rng / item / monster / dungeon / player /
 //           combat / events / save / game(回合驱动)
 // 配合 gcov -b 可测分支覆盖率（见 run_tests.sh）

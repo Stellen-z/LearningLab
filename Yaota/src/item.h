@@ -1,4 +1,4 @@
-// item.h —— 物品定义（图鉴条目）与运行时实例
+﻿// item.h —— 物品定义（图鉴条目）与运行时实例
 #pragma once
 
 #include "types.h"

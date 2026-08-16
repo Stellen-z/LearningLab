@@ -1,4 +1,4 @@
-// main.cpp —— 程序入口：控制台初始化、标题画面、创建角色
+﻿// main.cpp —— 程序入口：控制台初始化、标题画面、创建角色
 #include "game.h"
 #include "render.h"
 #include "save.h"

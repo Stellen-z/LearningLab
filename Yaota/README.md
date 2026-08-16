@@ -36,6 +36,19 @@ build.bat         # Windows CMD
 `-static`：静态链接运行时，避免加载到 Git Bash 自带的旧版 libstdc++-6.dll
 （该 DLL 与新版 GCC 的 ABI 不匹配，`ifstream` 构造直接段错误）。
 
+### Visual Studio（VS2022 / VS2026）构建
+
+所有源文件已带 **UTF-8 BOM**，MSVC 会自动识别编码，直接用你的 .sln/.vcxproj
+重新生成就行（无需改项目属性）。命令行党也可以：
+
+```bat
+build_msvc.bat        :: 自动定位 vcvars64 并编译出 yaota_msvc.exe
+```
+
+如果你新建自己的 VS 工程，遇到满屏 `warning C4819` + 上百个语法错误
+（错误信息里出现"鍚庡北鐮嶇"之类的乱码后缀），那就是源码被按 GBK 误读了：
+要么保留 BOM，要么在 项目属性 → C/C++ → 命令行 里加 `/utf-8`。
+
 ## 玩法
 
 | 按键 | 作用 | 按键 | 作用 |
@@ -125,6 +138,11 @@ for f in src/*.h src/*.cpp; do sed -e '/^#pragma once/d' -e '/^#include /d' "$f"
 4. **玩家出生在墙里**：`setupFloor` 生成两次地图、用第一次的房间中心当出生点——
    第二次重生成后那里可能是山岩。`game_stairs_next_floor` 用例抓出，改为单次生成
    + 贴脸妖怪挪远。
+5. **MSVC 满屏语法错误**：VS2026 按 GBK（代码页 936）读 UTF-8 无 BOM 源码，
+   中文注释吞换行、字符串字面量断裂，C4819 之后雪崩出几百条错误。
+   修复：全部源文件加 UTF-8 BOM（g++ 与 MSVC 通吃）。附赠同款：
+   `cmd.exe` 解析批处理也用 GBK——.bat 里的 UTF-8 中文注释同样会炸，
+   所以 `build_msvc.bat` 全 ASCII。
 
 ## 给 C++ 学习者的导览
 

@@ -1,4 +1,4 @@
-// events_data.cpp —— 奇遇事件全表（34 条）
+﻿// events_data.cpp —— 奇遇事件全表（34 条）
 // 设计原则：每个选择都有代价或风险，没有白给的午餐；文案要有"妖塔味"。
 #include "events.h"
 #include "rng.h"

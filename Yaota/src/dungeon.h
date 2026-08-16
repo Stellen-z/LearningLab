@@ -1,4 +1,4 @@
-// dungeon.h —— 随机地图生成：房间 + 走廊 + 楼梯 + 落物点
+﻿// dungeon.h —— 随机地图生成：房间 + 走廊 + 楼梯 + 落物点
 #pragma once
 
 #include "types.h"

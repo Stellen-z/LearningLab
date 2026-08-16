@@ -1,4 +1,4 @@
-// game.cpp —— 主循环与各系统的粘合逻辑
+﻿// game.cpp —— 主循环与各系统的粘合逻辑
 #include "game.h"
 #include "render.h"
 #include "combat.h"

@@ -1,4 +1,4 @@
-// monster.h —— 妖怪图鉴定义与运行时实例
+﻿// monster.h —— 妖怪图鉴定义与运行时实例
 #pragma once
 
 #include "types.h"

@@ -1,4 +1,4 @@
-// player.cpp —— 玩家的成长逻辑
+﻿// player.cpp —— 玩家的成长逻辑
 #include "player.h"
 #include "rng.h"
 

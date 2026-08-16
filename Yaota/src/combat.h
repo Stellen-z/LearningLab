@@ -1,4 +1,4 @@
-// combat.h —— 战斗结算公式（纯函数，谁都能调）
+﻿// combat.h —— 战斗结算公式（纯函数，谁都能调）
 #pragma once
 
 #include "player.h"

@@ -1,4 +1,4 @@
-// events.h —— 奇遇事件：踩到祭坛(坛)时随机触发一个
+﻿// events.h —— 奇遇事件：踩到祭坛(坛)时随机触发一个
 #pragma once
 
 #include "types.h"
