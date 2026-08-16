@@ -58,10 +58,11 @@ void Dungeon::generate(int floor, int playerX, int playerY) {
         }
     }
 
-    // ---- 3. 楼梯放在离玩家最远的房间 ----
-    const Room& far = farthestRoomFrom(playerX, playerY);
-    stairsX_ = far.cx();
-    stairsY_ = far.cy();
+    // ---- 4. 楼梯放在离玩家最远的房间 ----
+    // （变量名避开 far——windows.h 会把它定义成宏，单文件合并版会撞名）
+    const Room& farRoom = farthestRoomFrom(playerX, playerY);
+    stairsX_ = farRoom.cx();
+    stairsY_ = farRoom.cy();
     at(stairsX_, stairsY_) = Tile::Stairs;
 
     placeFeatures(floor, playerX, playerY);

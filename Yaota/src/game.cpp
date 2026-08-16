@@ -56,9 +56,9 @@ void Game::setupFloor() {
 
     for (auto& m : dungeon_.spawnedMonsters()) {
         if (std::hypot(m.x - sx, m.y - sy) < 6) {
-            const Room& far = dungeon_.farthestRoomFrom(sx, sy);
-            m.x = m.homeX = far.cx();
-            m.y = m.homeY = far.cy();
+            const Room& farRoom = dungeon_.farthestRoomFrom(sx, sy);
+            m.x = m.homeX = farRoom.cx();
+            m.y = m.homeY = farRoom.cy();
         }
     }
 
