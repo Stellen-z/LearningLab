@@ -10,6 +10,9 @@
 namespace yaota {
 
 class Game {
+    // 测试后门：单元测试通过 GamePeer 触达私有玩法逻辑（见 tests/test_all.cpp）
+    friend class GamePeer;
+
 public:
     void newGame(const std::wstring& name, Element spirit);
     bool loadGame();   // 成功返回 true（读档后调用 run 继续）
@@ -64,6 +67,33 @@ private:
     bool over_      = false;
     int  kills_     = 0;
     int  turn_      = 0;
+};
+
+// GamePeer —— 测试专用转发器：以友元身份把非交互的私有玩法逻辑
+// 暴露成可直接调用的静态函数。交互式流程（菜单/暂停/主循环）不在此列，
+// 它们由脚本灌入式冒烟测试覆盖。
+class GamePeer {
+public:
+    static void move(Game& g, int dx, int dy)      { g.handleMove(dx, dy); }
+    static void pickup(Game& g)                    { g.tryPickup(); }
+    static void stairs(Game& g)                    { g.tryStairs(); }
+    static void meditate(Game& g)                  { g.meditate(); }
+    static void burst(Game& g)                     { g.spiritBurst(); }
+    static void refine(Game& g)                    { g.refineJunk(); }
+    static void monsterTurns(Game& g)              { g.monsterTurns(); }
+    static void attack(Game& g, Monster& m)        { g.attackMonster(m); }
+    static bool use(Game& g, size_t i)             { return g.useItem(i); }
+    static void equip(Game& g, size_t i)           { g.equipItem(i); }
+    static void drop(Game& g, size_t i)            { g.dropItem(i); }
+    static void eventFx(Game& g, int fx, std::wstring& out) { g.applyEventFx(fx, out); }
+    static void endTurn(Game& g)                   { g.endTurn(); }
+
+    static Dungeon& dungeon(Game& g)               { return g.dungeon_; }
+    static std::vector<GroundItem>& ground(Game& g){ return g.ground_; }
+    static std::vector<std::wstring>& logs(Game& g){ return g.logs_; }
+    static bool& revealAll(Game& g)                { return g.revealAll_; }
+    static bool over(Game& g)                      { return g.over_; }
+    static int kills(Game& g)                      { return g.kills_; }
 };
 
 } // namespace yaota

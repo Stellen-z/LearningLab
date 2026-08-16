@@ -412,6 +412,357 @@ TEST(game_endturn_simulation) {
     }
 }
 
+// ================= game（玩法逻辑，经 GamePeer 后门）=================
+
+TEST(game_move_walls_and_logs) {
+    Rng::get().seed(606);
+    Game g;
+    g.newGame(L"行者", Element::Jin);
+    Player& p = g.debugPlayer();
+    auto& logs = GamePeer::logs(g);
+
+    // 越界：安静返回不崩
+    p.x = 0; p.y = 0;
+    GamePeer::move(g, -1, 0);
+
+    // 地图上边框是墙 → 撞墙记日志
+    size_t before = logs.size();
+    p.x = 1; p.y = 1;
+    GamePeer::move(g, 0, -1);
+    CHECK(logs.size() > before);
+
+    // 房间中心向右走：走了或被挡，坐标不会越界
+    const Room& r = GamePeer::dungeon(g).rooms()[0];
+    p.x = r.cx(); p.y = r.cy();
+    GamePeer::move(g, 1, 0);
+    CHECK(p.x >= 0 && p.x < Dungeon::W);
+}
+
+TEST(game_pickup_and_drop) {
+    Rng::get().seed(607);
+    Game g;
+    g.newGame(L"行者", Element::Jin);
+    Player& p = g.debugPlayer();
+    p.inventory.clear();
+    auto& ground = GamePeer::ground(g);
+    ground.clear();   // 清掉本层随机掉落，精确控制测试场景
+
+    ground.push_back(GroundItem(p.x, p.y, Item(41, 2)));   // 小还丹 x2
+    GamePeer::pickup(g);
+    CHECK_EQ(p.inventory.size(), (size_t)1);
+    CHECK_EQ(p.inventory[0].defId, 41);
+    CHECK_EQ(p.inventory[0].count, 2);
+    CHECK_EQ(ground.size(), (size_t)0);
+
+    GamePeer::drop(g, 0);
+    CHECK_EQ(p.inventory.size(), (size_t)0);
+    CHECK_EQ(ground.size(), (size_t)1);
+    CHECK_EQ(ground[0].x, p.x);
+    CHECK_EQ(ground[0].y, p.y);
+
+    GamePeer::pickup(g);   // 捡回来
+    CHECK_EQ(p.inventory.size(), (size_t)1);
+    GamePeer::pickup(g);   // 空手拾取：只记日志不崩
+    CHECK_EQ(p.inventory.size(), (size_t)1);
+}
+
+TEST(game_pill_effects) {
+    Rng::get().seed(608);
+    Game g;
+    g.newGame(L"药人", Element::Mu);
+    Player& p = g.debugPlayer();
+    p.inventory.clear();
+
+    p.hp = 10;
+    p.addItem(40, 1);                       // 回气散 +40
+    CHECK_EQ(GamePeer::use(g, 0), true);
+    CHECK_EQ(p.hp, 50);
+    CHECK_EQ(p.inventory.size(), (size_t)0);  // 用光自动移除
+
+    p.exp = 5;
+    p.addItem(44, 1);                       // 聚灵丹 +40 修为
+    GamePeer::use(g, 0);
+    CHECK_EQ(p.exp, 45);
+
+    int mh = p.maxHp;
+    p.addItem(45, 1); GamePeer::use(g, 0);  // 培元丹
+    CHECK_EQ(p.maxHp, mh + 20);
+
+    int a0 = p.atkTotal;
+    p.addItem(46, 1); GamePeer::use(g, 0);  // 洗髓丹
+    CHECK_EQ(p.atkTotal, a0 + 2);
+
+    int d0 = p.defTotal;
+    p.addItem(47, 1); GamePeer::use(g, 0);  // 金刚丹
+    CHECK_EQ(p.defTotal, d0 + 2);
+
+    p.tribulationBonus = 0;
+    p.addItem(48, 1); GamePeer::use(g, 0);  // 破障丹
+    CHECK_EQ(p.tribulationBonus, 15);
+
+    p.hp = 1;
+    p.addItem(50, 1); GamePeer::use(g, 0);  // 龟息丹：回复上限一半
+    CHECK_EQ(p.hp, 1 + p.maxHp / 2);
+
+    p.hp = 5;
+    p.addItem(49, 1); GamePeer::use(g, 0);  // 解毒丹：保底回 15
+    CHECK_EQ(p.hp, 20);
+}
+
+TEST(game_scroll_effects) {
+    Rng::get().seed(609);
+    Game g;
+    g.newGame(L"符师", Element::Huo);
+    Player& p = g.debugPlayer();
+    p.maxHp = p.hp = 1000000;
+    p.mp = 100;
+    auto& mons = g.debugMonsters();
+    mons.clear();
+
+    // 火球符：波及相邻
+    mons.push_back(Monster(0, p.x + 1, p.y));
+    mons.push_back(Monster(0, p.x, p.y + 1));
+    mons[0].maxHp = mons[0].hp = 1000;
+    mons[1].maxHp = mons[1].hp = 1000;
+    p.inventory.clear();
+    p.addItem(60, 1);
+    GamePeer::use(g, 0);
+    CHECK(mons[0].hp < 1000);
+    CHECK(mons[1].hp < 1000);
+    CHECK(mons[0].alive && mons[1].alive);
+
+    // 冰封符：震慑
+    p.addItem(61, 1); GamePeer::use(g, 0);
+    CHECK(mons[0].stunTurns > 0 || mons[1].stunTurns > 0);
+
+    // 摄妖符：范围内震慑
+    mons[0].stunTurns = 0;
+    p.addItem(64, 1); GamePeer::use(g, 0);
+    CHECK(mons[0].stunTurns > 0);
+
+    // 天眼符
+    CHECK_EQ(GamePeer::revealAll(g), false);
+    p.addItem(63, 1); GamePeer::use(g, 0);
+    CHECK_EQ(GamePeer::revealAll(g), true);
+
+    // 五雷符：劈最近
+    mons[0].hp = 5;
+    int exp0 = p.exp;
+    p.addItem(65, 1); GamePeer::use(g, 0);
+    CHECK_EQ(mons[0].alive, false);
+    CHECK_EQ(GamePeer::kills(g), 1);
+    CHECK(p.exp > exp0);
+
+    // 传送符：落到某个房间中心
+    p.inventory.clear();
+    p.addItem(62, 1); GamePeer::use(g, 0);
+    bool inRoom = false;
+    for (const auto& r : GamePeer::dungeon(g).rooms())
+        if (r.cx() == p.x && r.cy() == p.y) inRoom = true;
+    CHECK(inRoom);
+}
+
+TEST(game_equip_swap_and_refine) {
+    Rng::get().seed(610);
+    Game g;
+    g.newGame(L"武人", Element::Jin);
+    Player& p = g.debugPlayer();
+    p.inventory.clear();
+
+    p.addItem(1, 1);                        // 铁剑 攻+3
+    int atk0 = p.atk();
+    GamePeer::equip(g, 0);
+    CHECK_EQ(p.weaponId, 1);
+    CHECK_EQ(p.atk(), atk0 + 3);
+
+    p.addItem(3, 1);                        // 换火浣鞭，旧剑回包
+    GamePeer::equip(g, 0);
+    CHECK_EQ(p.weaponId, 3);
+    bool oldBack = false;
+    for (const auto& it : p.inventory) if (it.defId == 1) oldBack = true;
+    CHECK(oldBack);
+
+    p.addItem(20, 1);
+    GamePeer::equip(g, 1);                  // 法袍格
+    CHECK_EQ(p.armorId, 20);
+
+    // 炼化：奇物/炼材变灵石
+    p.inventory.clear();
+    p.addItem(80, 2);                       // 妖丹 x2 单价30
+    p.addItem(91, 3);                       // 铁矿石 x3 单价8
+    int gold0 = p.gold;
+    GamePeer::refine(g);
+    CHECK_EQ(p.gold, gold0 + 60 + 24);
+    CHECK_EQ(p.inventory.size(), (size_t)0);
+}
+
+TEST(game_burst_and_meditate) {
+    Rng::get().seed(611);
+    Game g;
+    g.newGame(L"爆发者", Element::Shui);
+    Player& p = g.debugPlayer();
+    p.maxHp = p.hp = 1000000;
+    p.mp = 100;
+    auto& mons = g.debugMonsters();
+    mons.clear();
+    mons.push_back(Monster(0, p.x + 1, p.y));
+    mons[0].maxHp = mons[0].hp = 5000;
+
+    GamePeer::burst(g);
+    CHECK_EQ(p.mp, 85);
+    CHECK(mons[0].hp < 5000);
+
+    p.mp = 5;
+    GamePeer::burst(g);                     // 灵力不足分支：无消耗无伤害
+    CHECK_EQ(p.mp, 5);
+
+    // 打坐：回蓝回红
+    mons.clear();                           // 清场防偷袭
+    p.hp = 10; p.mp = 0;
+    GamePeer::meditate(g);
+    CHECK(p.mp > 0);
+    CHECK(p.hp > 10);
+}
+
+TEST(game_monster_melee_and_flee) {
+    Rng::get().seed(612);
+    Game g;
+    g.newGame(L"活靶", Element::Tu);
+    Player& p = g.debugPlayer();
+    p.maxHp = p.hp = 1000000;
+    auto& mons = g.debugMonsters();
+
+    // 贴脸野狗妖连咬 20 回合：必有命中（单回合 5% 闪避）
+    mons.clear();
+    mons.push_back(Monster(0, p.x + 1, p.y));
+    mons[0].maxHp = mons[0].hp = 100;
+    int hp0 = p.hp;
+    for (int i = 0; i < 20; ++i) GamePeer::monsterTurns(g);
+    CHECK(p.hp < hp0);
+
+    // 胆小妖狐残血逃跑（远离或原地，绝不靠近玩家）
+    mons.clear();
+    mons.push_back(Monster(13, p.x + 1, p.y));   // 玩家右侧
+    mons[0].maxHp = 100; mons[0].hp = 10;
+    int fx = mons[0].x;
+    GamePeer::monsterTurns(g);
+    CHECK_GE(mons[0].x, fx);   // 向右远离玩家（被挡则原地）
+}
+
+TEST(game_stairs_next_floor) {
+    Rng::get().seed(613);
+    Game g;
+    g.newGame(L"登塔者", Element::Jin);
+    Player& p = g.debugPlayer();
+    p.floor = 3;
+    auto& d = GamePeer::dungeon(g);
+    p.x = d.stairsX();
+    p.y = d.stairsY();
+    GamePeer::stairs(g);
+    CHECK_EQ(p.floor, 4);
+    CHECK(d.walkable(p.x, p.y));            // 新层出生点合法
+    CHECK(d.stairsX() != p.x || d.stairsY() != p.y);  // 楼梯重新放置
+}
+
+TEST(game_event_fx_all_kinds) {
+    Rng::get().seed(614);
+    Game g;
+    g.newGame(L"奇缘者", Element::Mu);
+    Player& p = g.debugPlayer();
+    std::wstring out;
+
+    p.inventory.clear();
+    GamePeer::eventFx(g, FxHerbs, out);     // 灵草 x3
+    bool herb = false;
+    for (auto& it : p.inventory) if (it.defId == 90 && it.count >= 3) herb = true;
+    CHECK(herb);
+
+    int mh = p.maxHp;
+    GamePeer::eventFx(g, FxMaxHpUp, out);
+    CHECK_EQ(p.maxHp, mh + 15);
+    GamePeer::eventFx(g, FxMaxHpDown, out);
+    CHECK_EQ(p.maxHp, mh + 5);
+
+    p.tribulationBonus = 0;
+    GamePeer::eventFx(g, FxTribBuff, out);
+    CHECK_EQ(p.tribulationBonus, 10);
+
+    p.hp = 1; p.mp = 1;
+    GamePeer::eventFx(g, FxHealFull, out);
+    CHECK_EQ(p.hp, p.maxHp);
+    CHECK_EQ(p.mp, p.maxMp);
+
+    int a0 = p.atkTotal, d0 = p.defTotal;
+    GamePeer::eventFx(g, FxLearnAtk, out);
+    CHECK_EQ(p.atkTotal, a0 + 1);
+    GamePeer::eventFx(g, FxLearnDef, out);
+    CHECK_EQ(p.defTotal, d0 + 1);
+
+    p.weaponId = -1;
+    GamePeer::eventFx(g, FxUpgradeWeapon, out);   // 无武器分支
+    CHECK_EQ(p.weaponId, -1);
+    p.weaponId = 1; p.weaponBonus = 0;
+    GamePeer::eventFx(g, FxUpgradeWeapon, out);
+    CHECK_EQ(p.weaponBonus, 2);
+
+    p.armorId = -1;
+    GamePeer::eventFx(g, FxUpgradeArmor, out);
+    CHECK_EQ(p.armorId, -1);
+    p.armorId = 20; p.armorBonus = 0;
+    GamePeer::eventFx(g, FxUpgradeArmor, out);
+    CHECK_EQ(p.armorBonus, 2);
+
+    auto& d = GamePeer::dungeon(g);
+    GamePeer::eventFx(g, FxTeleportNear, out);
+    CHECK(std::hypot(p.x - d.stairsX(), p.y - d.stairsY()) <= 4.5);
+
+    p.inventory.clear();
+    GamePeer::eventFx(g, FxRandomItem, out);
+    CHECK_EQ(p.inventory.size(), (size_t)1);
+    GamePeer::eventFx(g, FxRandomPill, out);
+    CHECK_GE(p.inventory.size(), (size_t)1);
+
+    GamePeer::eventFx(g, FxNothing, out);   // 不崩即可
+    GamePeer::eventFx(g, FxNone, out);
+}
+
+// ================= 补充：工具函数与查询分支 =================
+
+TEST(types_utils_roundtrip) {
+    std::wstring ws = L"修仙ABC渡劫";
+    CHECK_EQ(utf8ToWstr(wstrToUtf8(ws)), ws);
+    CHECK_EQ(wstrToUtf8(L"ascii"), std::string("ascii"));
+
+    for (int c = 0; c <= 8; ++c)
+        CHECK(std::string(colorCode((Color)c)).size() > 0);
+    for (int t = 0; t <= 5; ++t)
+        CHECK(std::wstring(itemTypeWName((ItemType)t)).size() >= 2);
+    for (int e = 0; e <= 4; ++e)
+        CHECK_EQ(std::wstring(elementWName((Element)e)).size(), (size_t)1);
+}
+
+TEST(combat_ai_and_fallbacks) {
+    CHECK_EQ(aggroRange(monsterDef(13)), 6);  // 妖狐 Coward
+    CHECK_EQ(aggroRange(monsterDef(3)), 7);   // 火鼠 Sneaky → 默认档
+
+    // Brave 加成分支与普通怪都过一遍
+    Player p;
+    p.init(L"靶子", Element::Jin);
+    Monster brave(7, 0, 0), plain(5, 0, 0);
+    brave.maxHp = brave.hp = 1;
+    plain.maxHp = plain.hp = 1;
+    for (int i = 0; i < 100; ++i) {
+        HitResult a = monsterHits(p, brave);
+        if (!a.dodged) CHECK_GE(a.damage, 1);
+        HitResult b = monsterHits(p, plain);
+        if (!b.dodged) CHECK_GE(b.damage, 1);
+    }
+
+    // 图鉴查询的未知 id 回退
+    CHECK_EQ(eventDef(9999).id, eventDex().front().id);
+    CHECK_EQ(monsterDef(9999).id, monsterDex().front().id);
+}
+
 int main() {
     return tf::runAll();
 }
