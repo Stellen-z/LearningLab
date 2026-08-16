@@ -53,7 +53,10 @@ private:
     void setupFloor();          // 生成当前层并把玩家/妖怪/掉落就位
     Monster* monsterAt(int x, int y);
     GroundItem* groundItemAt(int x, int y);
-    void log(const std::wstring& msg, Color = Color::Default) { logs_.push_back(msg); }
+    void log(const std::wstring& msg, Color = Color::Default) {
+        logs_.push_back(msg);
+        if (logs_.size() > 64) logs_.erase(logs_.begin(), logs_.end() - 64); // 防止无上限增长
+    }
     void gameOver(bool ascended);
     void regenTick();
 

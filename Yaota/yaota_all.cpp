@@ -5,13 +5,15 @@
 //  突破境界，最终渡劫飞升。地图用汉字渲染：仙=你，妖/魔/鬼=妖怪，
 //  山=岩壁，梯=楼梯，坛=祭坛（奇遇），草=灵草，箱=宝箱。
 //
-//  本文件由多文件工程合并而成（headers + 数据表 + 实现），按原来的
-//  依赖顺序排列，各段之间有分隔标注。编译（MinGW 需带 UTF-8 参数）：
-//      g++ -std=c++17 -O2 -finput-charset=UTF-8 -fexec-charset=UTF-8 yaota_all.cpp -o yaota
+//  本文件由 src/ 多文件工程按依赖顺序合并而成（详见同目录 README.md）。
+//  编译（MinGW 两个参数都不能省，原因见 README"开发实录"）：
+//    g++ -std=c++17 -O2 -static -static-libgcc -static-libstdc++ \
+//        -finput-charset=UTF-8 -fexec-charset=UTF-8 yaota_all.cpp -o yaota
 //
 //  系统一览：五行相生相克 / 九境界渡劫 / 随机地图（房间+走廊+迷雾视野）
 //  妖怪图鉴 32 种（4 类 AI）/ 物品 47 件 / 奇遇事件 34 条
 //  战斗（克制·暴击·闪避）/ 背包装备 / 存档 / 汉字渲染
+//  测试：tests/ 下 28 用例 16000+ 断言全绿，覆盖率见 README
 // ============================================================================
 #include <algorithm>
 #include <cmath>
@@ -23,6 +25,11 @@
 #include <sstream>
 #include <string>
 #include <vector>
+
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>   // main.cpp 段的控制台初始化需要
+#endif
 
 // ============================== types.h ==============================
 
@@ -624,10 +631,19 @@ bool loadFromFile(Player& p, int& kills);
 namespace yaota {
 
 class Game {
+    // 测试后门：单元测试通过 GamePeer 触达私有玩法逻辑（见 tests/test_all.cpp）
+    friend class GamePeer;
+
 public:
     void newGame(const std::wstring& name, Element spirit);
     bool loadGame();   // 成功返回 true（读档后调用 run 继续）
     void run();        // 主循环，直到死亡 / 飞升 / 退出
+
+    // ---- 测试钩子：让单元测试能驱动内部回合与检查状态 ----
+    void debugEndTurn() { endTurn(); }
+    Player& debugPlayer() { return player_; }
+    std::vector<Monster>& debugMonsters() { return monsters_; }
+    Dungeon& debugDungeon() { return dungeon_; }
 
 private:
     // ---- 玩家动作（大多消耗一回合）----
@@ -658,7 +674,10 @@ private:
     void setupFloor();          // 生成当前层并把玩家/妖怪/掉落就位
     Monster* monsterAt(int x, int y);
     GroundItem* groundItemAt(int x, int y);
-    void log(const std::wstring& msg, Color = Color::Default) { logs_.push_back(msg); }
+    void log(const std::wstring& msg, Color = Color::Default) {
+        logs_.push_back(msg);
+        if (logs_.size() > 64) logs_.erase(logs_.begin(), logs_.end() - 64); // 防止无上限增长
+    }
     void gameOver(bool ascended);
     void regenTick();
 
@@ -672,6 +691,33 @@ private:
     bool over_      = false;
     int  kills_     = 0;
     int  turn_      = 0;
+};
+
+// GamePeer —— 测试专用转发器：以友元身份把非交互的私有玩法逻辑
+// 暴露成可直接调用的静态函数。交互式流程（菜单/暂停/主循环）不在此列，
+// 它们由脚本灌入式冒烟测试覆盖。
+class GamePeer {
+public:
+    static void move(Game& g, int dx, int dy)      { g.handleMove(dx, dy); }
+    static void pickup(Game& g)                    { g.tryPickup(); }
+    static void stairs(Game& g)                    { g.tryStairs(); }
+    static void meditate(Game& g)                  { g.meditate(); }
+    static void burst(Game& g)                     { g.spiritBurst(); }
+    static void refine(Game& g)                    { g.refineJunk(); }
+    static void monsterTurns(Game& g)              { g.monsterTurns(); }
+    static void attack(Game& g, Monster& m)        { g.attackMonster(m); }
+    static bool use(Game& g, size_t i)             { return g.useItem(i); }
+    static void equip(Game& g, size_t i)           { g.equipItem(i); }
+    static void drop(Game& g, size_t i)            { g.dropItem(i); }
+    static void eventFx(Game& g, int fx, std::wstring& out) { g.applyEventFx(fx, out); }
+    static void endTurn(Game& g)                   { g.endTurn(); }
+
+    static Dungeon& dungeon(Game& g)               { return g.dungeon_; }
+    static std::vector<GroundItem>& ground(Game& g){ return g.ground_; }
+    static std::vector<std::wstring>& logs(Game& g){ return g.logs_; }
+    static bool& revealAll(Game& g)                { return g.revealAll_; }
+    static bool over(Game& g)                      { return g.over_; }
+    static int kills(Game& g)                      { return g.kills_; }
 };
 
 } // namespace yaota
@@ -1349,7 +1395,13 @@ std::wstring Renderer::promptLine(const std::wstring& prompt) {
     print(prompt, Color::Cyan);
     std::cout << " ";
     std::string line;
-    std::getline(std::cin, line);
+    if (!std::getline(std::cin, line)) {
+        // stdin 结束（管道输入耗尽 / 终端关闭）：视为玩家离场，干净退出。
+        // 否则主循环会拿到空输入无限重绘（脚本测试时曾刷出 6.9GB 输出）。
+        std::cout << "\n";
+        println(L"（输入流已尽，就此别过。）", Color::Dark);
+        std::exit(0);
+    }
     return utf8ToWstr(line);
 }
 
@@ -1638,7 +1690,8 @@ static const char* SAVE_PATH = "yaota_save.txt";
 
 bool saveExists() {
     std::ifstream f(SAVE_PATH);
-    return f.good();
+    // 注意：MinGW libstdc++ 下打开失败时 good() 仍可能为 true，必须用 is_open()
+    return f.is_open();
 }
 
 bool saveToFile(const Player& p, int kills) {
@@ -1745,17 +1798,26 @@ bool Game::loadGame() {
     return true;
 }
 
-// 生成本层：先随机生成一次拿到出生房间，再用真正的出生点重新生成，
-// 保证妖怪不会贴脸刷新、楼梯离出生点足够远。
+// 生成本层：一次生成，玩家落在首个房间中心；
+// 离玩家太近的妖怪挪去最远房间（守着楼梯，正好当拦路妖）。
+// （旧实现生成两次、拿第一次的房间中心当出生点——第二次重生成后
+//   那里可能是山岩，玩家会卡在墙里出生。单元测试抓出来的。）
 void Game::setupFloor() {
     int f = player_.floor;
     dungeon_.generate(f, 2, 2);
+
     int sx = dungeon_.rooms()[0].cx();
     int sy = dungeon_.rooms()[0].cy();
-    dungeon_.generate(f, sx, sy);
-
     player_.x = sx;
     player_.y = sy;
+
+    for (auto& m : dungeon_.spawnedMonsters()) {
+        if (std::hypot(m.x - sx, m.y - sy) < 6) {
+            const Room& far = dungeon_.farthestRoomFrom(sx, sy);
+            m.x = m.homeX = far.cx();
+            m.y = m.homeY = far.cy();
+        }
+    }
 
     monsters_ = dungeon_.spawnedMonsters();
     dungeon_.spawnedMonsters().clear();
